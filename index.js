@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PoE Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.001.001
+// @version      000.001.002
 // @updateURL       https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -376,7 +376,10 @@
     });
   };
 
-  const getChallengeSearchChars = (header, singleTask, subTasks) => {
+  const getChallengeSearchChars = challEl => {
+    const header = challEl.querySelector('h2');
+    const singleTask = challEl.querySelector('.text');
+    const subTasks = challEl.querySelectorAll('.items ul li');
     let subTasksString;
     if (subTasks.length !== 0) {
       subTasksString = [...subTasks].map(taskEl => taskEl.textContent).join('');
@@ -391,20 +394,20 @@
   };
 
   const createChallObj = (id, challEl) => {
-    const header = challEl.querySelector('h2');
-    const singleTask = challEl.querySelector('.text');
-    const subTasks = challEl.querySelectorAll('.items ul li');
     const newChallObj = {
       note: '',
       tags: [],
-      searchChars: getChallengeSearchChars(header, singleTask, subTasks),
+      searchChars: getChallengeSearchChars(challEl),
     };
     state.challObjMap.set(id, newChallObj);
   };
 
   const updateChallEl = (id, challEl) => {
     const challObj = state.challObjMap.get(id);
+    // in case they are changing challenge text
+    const searchChars = getChallengeSearchChars(challEl);
     challEl.querySelector('.note-textarea').value = challObj.note;
+    challObj.searchChars = searchChars;
   };
 
   const processChallenges = () => {
