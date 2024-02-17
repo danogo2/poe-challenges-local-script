@@ -302,7 +302,7 @@
   const insertClearButtonEl = parentEl => {
     parentEl.insertAdjacentHTML(
       'beforeend',
-      `<div class="settings-option"><button class='button-settings button-clear'><div class="settings-icon icon-clear" title="clear challenges">${svgIconTrash}</div></button></div>`
+      `<div class="settings-option"><button class='button-settings button-clear'><div class="settings-icon icon-clear" title="clear league">${svgIconTrash}</div></button></div>`
     );
     return parentEl.querySelector('.button-clear');
   };
@@ -482,7 +482,7 @@
 
   const clickClearButtonHandler = event => {
     const hasConfirmed = confirm(
-      `Clear challenges for ${state.league} league?`
+      `Clear tags and notes for ${state.league} league?`
     );
     if (hasConfirmed) {
       localStorage.removeItem(state.league);
