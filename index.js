@@ -2,6 +2,9 @@
 // @name         PoE Challenges
 // @namespace    http://tampermonkey.net/
 // @version      2024-02-12
+// @version      000.001.000
+// @updateURL       https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
+// @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  try to take over the world!
 // @author       You
 // @match        https://www.pathofexile.com/account/view-profile/*/challenges*
@@ -43,13 +46,19 @@
     3 3 3 3 repeat;
 }
 
-.label-checkbox {
+/* hide toggle button */
+
+.button-hide {
   display: flex;
   height: 100%;
   align-items: center;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+  outline: none;
 }
 
-.label-checkbox:hover {
+.button-hide:hover {
   filter: brightness(0.8);
 }
 
@@ -57,10 +66,6 @@
   width: 24px;
   height: 24px;
   cursor: pointer;
-}
-
-.hide-completed {
-  user-select: none;
 }
 
 .icon-show,
@@ -259,6 +264,7 @@
     challsGotLoaded: false,
     allTagsSet: new Set(),
     league: document.querySelector('select[name="season"]').value,
+    hideCompleted: false,
   };
 
   const getChallsFromLS = () => {
@@ -284,12 +290,12 @@
     return parentEl.querySelector('.input-search');
   };
 
-  const insertHideCheckboxEl = parentEl => {
+  const insertHideButtonEl = parentEl => {
     parentEl.insertAdjacentHTML(
       'beforeend',
-      `<div class="settings-option"><input type="checkbox" id="checkbox-hide" class="checkbox-hide hidden"/><label class="label-checkbox" for="checkbox-hide"><div class="settings-icon icon-hide" title="hide completed">${svgIconEye}</div><div class="settings-icon icon-show" title="show completed">${svgIconEyeOff}</div></label></div>`
+      `<div class="settings-option"><button class='button-hide'><div class="settings-icon icon-hide" title="hide completed">${svgIconEye}</div><div class="settings-icon icon-show" title="show completed">${svgIconEyeOff}</div></button></div>`
     );
-    return parentEl.querySelector('.checkbox-hide');
+    return parentEl.querySelector('.button-hide');
   };
 
   // TODO: add tag input
@@ -317,19 +323,21 @@
 
   const noteChangeHandler = event => {
     const textareaEl = event.target;
+    const formattedNote = textareaEl.value.trim();
+    textareaEl.value = formattedNote;
     const id = Number(textareaEl.dataset.id);
     const chall = state.challObjMap.get(id);
-    chall.note = textareaEl.value;
+    chall.note = formattedNote;
     updateLS();
   };
 
   const changeChallStyle = (id, challEl) => {
-    // header
+    // create header
     const headerEl = challEl.querySelector('h2');
     headerEl.textContent = `${id}. ${headerEl.textContent}`;
     const completionEl = challEl.querySelector('.completion-detail');
     const completionImgEl = challEl.querySelector('img.completion');
-    const detailEl = challEl.querySelector('.detail');
+    let detailEl = challEl.querySelector('.detail');
     challEl.innerHTML = `<div class="achievement-header"></div>`;
     const headerContainerEl = challEl.querySelector('.achievement-header');
     headerContainerEl.insertAdjacentElement('beforeend', headerEl);
@@ -340,6 +348,19 @@
       headerContainerEl.insertAdjacentElement('beforeend', completionImgEl);
       completionImgEl.style.paddingRight = '26px';
     }
+    // fix bug where is no detail el
+    if (!detailEl) {
+      challEl.insertAdjacentHTML(
+        'beforeend',
+        `<div class='detail'>
+          <div class='detail-inner'>
+            <span class='text'></span>
+          </div>
+        </div>`
+      );
+      detailEl = challEl.querySelector('.detail');
+    }
+    // add detail element
     challEl.insertAdjacentElement('beforeend', detailEl);
     // note input
     const taskList = challEl.querySelector('.items');
@@ -367,7 +388,7 @@
     const searchChars =
       header.textContent + singleTask.textContent + subTasksString;
 
-    return searchChars.replaceAll(' ', '').toLowerCase();
+    return searchChars.trim().toLowerCase();
   };
 
   const createChallObj = (id, challEl) => {
@@ -435,12 +456,12 @@
     }
   };
 
-  const clickHideCheckboxHandler = event => {
-    const checkboxEl = event.target;
+  const clickHideButtonHandler = event => {
+    state.hideCompleted = !state.hideCompleted;
     const challengeContainerEl = document.querySelector(
       '.achievement-container'
     );
-    if (checkboxEl.checked) {
+    if (state.hideCompleted) {
       challengeContainerEl.classList.add('hide-completed');
     } else {
       challengeContainerEl.classList.remove('hide-completed');
@@ -464,15 +485,15 @@
     );
     const settingsEl = settingsContainer.querySelector('.settings');
     const searchInputEl = insertSearchInputEl(settingsEl);
-    const hideCheckboxEl = insertHideCheckboxEl(settingsEl);
+    const hideButtonEl = insertHideButtonEl(settingsEl);
     searchInputEl.addEventListener('input', event => {
       searchChallHandler(event);
     });
     searchInputEl.addEventListener('change', event => {
       formatSearchInputValue(event);
     });
-    hideCheckboxEl.addEventListener('change', event => {
-      clickHideCheckboxHandler(event);
+    hideButtonEl.addEventListener('click', event => {
+      clickHideButtonHandler(event);
     });
   };
 
