@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name         PoE Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.001.000
+// @version      000.001.001
 // @updateURL       https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
-// @description  try to take over the world!
-// @author       You
+// @description  path of exile challenges extension
+// @author       danogo
 // @match        https://www.pathofexile.com/account/view-profile/*/challenges*
-// @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
+// @icon         https://www.google.com/s2/favicons?sz=64&domain=pathofexile.com
 // @grant        GM_addStyle
 // @run-at       document-end
 // ==/UserScript==
