@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PoE Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.002.000
+// @version      000.002.001
 // @updateURL       https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
