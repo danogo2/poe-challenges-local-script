@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PoE Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.001.002
+// @version      000.002.000
 // @updateURL       https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -19,7 +19,7 @@
 .settings {
   display: flex;
   padding: 5px 0;
-  gap: 1%;
+  gap: 2%;
 }
 
 .input-search {
@@ -47,7 +47,7 @@
 
 /* hide toggle button */
 
-.button-hide {
+.button-settings {
   display: flex;
   height: 100%;
   align-items: center;
@@ -55,9 +55,10 @@
   border: none;
   box-sizing: border-box;
   outline: none;
+  padding: 0;
 }
 
-.button-hide:hover {
+.button-settings:hover {
   filter: brightness(0.8);
 }
 
@@ -247,8 +248,6 @@
 .inner-block {
   display: block;
 }
-
-
     `);
 
   const svgIconEye =
@@ -256,6 +255,9 @@
 
   const svgIconEyeOff =
     '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path d="M432 448a15.92 15.92 0 01-11.31-4.69l-352-352a16 16 0 0122.62-22.62l352 352A16 16 0 01432 448zM248 315.85l-51.79-51.79a2 2 0 00-3.39 1.69 64.11 64.11 0 0053.49 53.49 2 2 0 001.69-3.39zM264 196.15L315.87 248a2 2 0 003.4-1.69 64.13 64.13 0 00-53.55-53.55 2 2 0 00-1.72 3.39z" fill="#beb698"/><path d="M491 273.36a32.2 32.2 0 00-.1-34.76c-26.46-40.92-60.79-75.68-99.27-100.53C349 110.55 302 96 255.68 96a226.54 226.54 0 00-71.82 11.79 4 4 0 00-1.56 6.63l47.24 47.24a4 4 0 003.82 1.05 96 96 0 01116 116 4 4 0 001.05 3.81l67.95 68a4 4 0 005.4.24 343.81 343.81 0 0067.24-77.4zM256 352a96 96 0 01-93.3-118.63 4 4 0 00-1.05-3.81l-66.84-66.87a4 4 0 00-5.41-.23c-24.39 20.81-47 46.13-67.67 75.72a31.92 31.92 0 00-.64 35.54c26.41 41.33 60.39 76.14 98.28 100.65C162.06 402 207.92 416 255.68 416a238.22 238.22 0 0072.64-11.55 4 4 0 001.61-6.64l-47.47-47.46a4 4 0 00-3.81-1.05A96 96 0 01256 352z" fill="#beb698"/></svg>';
+
+  const svgIconTrash =
+    '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path d="M296 64h-80a7.91 7.91 0 00-8 8v24h96V72a7.91 7.91 0 00-8-8z" fill="none"/><path d="M432 96h-96V72a40 40 0 00-40-40h-80a40 40 0 00-40 40v24H80a16 16 0 000 32h17l19 304.92c1.42 26.85 22 47.08 48 47.08h184c26.13 0 46.3-19.78 48-47l19-305h17a16 16 0 000-32zM192.57 416H192a16 16 0 01-16-15.43l-8-224a16 16 0 1132-1.14l8 224A16 16 0 01192.57 416zM272 400a16 16 0 01-32 0V176a16 16 0 0132 0zm32-304h-96V72a7.91 7.91 0 018-8h80a7.91 7.91 0 018 8zm32 304.57A16 16 0 01320 416h-.58A16 16 0 01304 399.43l8-224a16 16 0 1132 1.14z" fill="#beb698"/></svg>';
 
   const state = {
     challElMap: new Map(),
@@ -266,7 +268,7 @@
     hideCompleted: false,
   };
 
-  const getChallsFromLS = () => {
+  const getStateFromLS = () => {
     const challsArray = JSON.parse(localStorage.getItem(state.league));
     if (challsArray) {
       state.challsGotLoaded = true;
@@ -292,9 +294,17 @@
   const insertHideButtonEl = parentEl => {
     parentEl.insertAdjacentHTML(
       'beforeend',
-      `<div class="settings-option"><button class='button-hide'><div class="settings-icon icon-hide" title="hide completed">${svgIconEye}</div><div class="settings-icon icon-show" title="show completed">${svgIconEyeOff}</div></button></div>`
+      `<div class="settings-option"><button class='button-settings button-hide'><div class="settings-icon icon-hide" title="hide completed">${svgIconEye}</div><div class="settings-icon icon-show" title="show completed">${svgIconEyeOff}</div></button></div>`
     );
     return parentEl.querySelector('.button-hide');
+  };
+
+  const insertClearButtonEl = parentEl => {
+    parentEl.insertAdjacentHTML(
+      'beforeend',
+      `<div class="settings-option"><button class='button-settings button-clear'><div class="settings-icon icon-clear" title="clear challenges">${svgIconTrash}</div></button></div>`
+    );
+    return parentEl.querySelector('.button-clear');
   };
 
   // TODO: add tag input
@@ -470,6 +480,16 @@
     }
   };
 
+  const clickClearButtonHandler = event => {
+    const hasConfirmed = confirm(
+      `Clear challenges for ${state.league} league?`
+    );
+    if (hasConfirmed) {
+      localStorage.removeItem(state.league);
+      location.reload();
+    }
+  };
+
   const formatSearchInputValue = event => {
     const searchEl = event.target;
     const searchValue = searchEl.value;
@@ -488,6 +508,7 @@
     const settingsEl = settingsContainer.querySelector('.settings');
     const searchInputEl = insertSearchInputEl(settingsEl);
     const hideButtonEl = insertHideButtonEl(settingsEl);
+    const clearButtonEl = insertClearButtonEl(settingsEl);
     searchInputEl.addEventListener('input', event => {
       searchChallHandler(event);
     });
@@ -497,10 +518,13 @@
     hideButtonEl.addEventListener('click', event => {
       clickHideButtonHandler(event);
     });
+    clearButtonEl.addEventListener('click', event => {
+      clickClearButtonHandler(event);
+    });
   };
 
   const init = () => {
-    getChallsFromLS();
+    getStateFromLS();
     addSettingsHTML();
     processChallenges();
   };
