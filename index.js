@@ -15,11 +15,65 @@
 (function () {
   'use strict';
   GM_addStyle(`
-  /* adding settings */
+  /* adjusting layout */
+.profile {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile .profile-top {
+  height: 30px;
+}
+
+.profile .title-bar {
+  padding-right: 10px;
+  display: block;
+  align-self: center;
+  margin: 0;
+}
+
+.profile .title-bar::first-letter {
+  text-transform: uppercase;
+}
+
+.challenge-list.poeForm form,
+.challenge-list.poeForm form select {
+  height: 100%;
+  max-width: 160px;
+}
+
+.profile .profile-container,
+.profile .profile-container .container-top {
+  width: 100%;
+}
+
+.profile .profile-container .achievement-container .achievement-list {
+  width: 100%;
+  margin-top: 6px;
+}
+
+.profile .profile-container .container-top {
+  background-size: cover;
+}
+
+.profile .profile-details,
+.profile .progress-bar-container.large,
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  .challenge-progress-bar-container {
+  display: none;
+}
+
+/* adding settings */
 .settings {
   display: flex;
   padding: 5px 0;
   gap: 2%;
+  align-items: stretch;
 }
 
 .input-search {
@@ -31,6 +85,7 @@
   box-sizing: border-box;
   padding: 3px;
   font-size: 0.8rem;
+  max-width: 160px;
 }
 
 .input-search::placeholder {
@@ -81,37 +136,6 @@
 .hidden,
 .search-hidden,
 .hide-completed .achievement:not(.incomplete) {
-  display: none;
-}
-
-/* adjusting layout */
-.profile {
-  display: flex;
-  flex-direction: column;
-}
-.profile .profile-container,
-.profile .profile-container .container-top {
-  width: 100%;
-}
-
-.profile .profile-container .achievement-container .achievement-list {
-  width: 100%;
-  margin-top: 10px;
-}
-
-.profile .profile-container .container-top {
-  background-size: cover;
-}
-
-.profile .profile-details,
-.profile .progress-bar-container.large,
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  .detail
-  .challenge-progress-bar-container {
   display: none;
 }
 
@@ -188,6 +212,8 @@
   .achievement
   .detail-inner {
   padding-left: 90px;
+  padding-top: 20px;
+  padding-bottom: 20px;
 }
 
 .btn-detail {
@@ -248,7 +274,8 @@
 .inner-block {
   display: block;
 }
-    `);
+
+      `);
 
   const svgIconEye =
     '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><circle cx="256" cy="256" r="64" fill="#beb698"/><path fill="#beb698" d="M490.84 238.6c-26.46-40.92-60.79-75.68-99.27-100.53C349 110.55 302 96 255.66 96c-42.52 0-84.33 12.15-124.27 36.11-40.73 24.43-77.63 60.12-109.68 106.07a31.92 31.92 0 00-.64 35.54c26.41 41.33 60.4 76.14 98.28 100.65C162 402 207.9 416 255.66 416c46.71 0 93.81-14.43 136.2-41.72 38.46-24.77 72.72-59.66 99.08-100.92a32.2 32.2 0 00-.1-34.76zM256 352a96 96 0 1196-96 96.11 96.11 0 01-96 96z"/></svg>';
@@ -321,6 +348,15 @@
   //   const tagsString = curChalTags.join(', ');
   //   headerEl.querySelector('.input-tag').value = tagsString;
   // };
+  // TODO: add tag dropdown
+
+  const insertTagSelectEl = parentEl => {
+    parentEl.insertAdjacentHTML(
+      'beforeend',
+      '<div class="settings-option"><select name="tags" id="tags"><option class="tag-option" value="">---</option></select></div>'
+    );
+    return parentEl.querySelector('#tags');
+  };
 
   const insertNoteTextareaEl = (parentEl, id) => {
     parentEl.insertAdjacentHTML(
@@ -362,10 +398,10 @@
       challEl.insertAdjacentHTML(
         'beforeend',
         `<div class='detail'>
-          <div class='detail-inner'>
-            <span class='text'></span>
-          </div>
-        </div>`
+            <div class='detail-inner'>
+              <span class='text'></span>
+            </div>
+          </div>`
       );
       detailEl = challEl.querySelector('.detail');
     }
@@ -468,6 +504,15 @@
     }
   };
 
+  const formatSearchInputHandler = event => {
+    const searchEl = event.target;
+    const searchValue = searchEl.value;
+    if (searchValue === '') return;
+    let searchValues = [...searchValue.match(/\S+/g)];
+    searchValues = new Set(searchValues);
+    searchEl.value = [...searchValues].join(' ');
+  };
+
   const clickHideButtonHandler = event => {
     state.hideCompleted = !state.hideCompleted;
     const challengeContainerEl = document.querySelector(
@@ -490,30 +535,29 @@
     }
   };
 
-  const formatSearchInputValue = event => {
-    const searchEl = event.target;
-    const searchValue = searchEl.value;
-    if (searchValue === '') return;
-    let searchValues = [...searchValue.match(/\S+/g)];
-    searchValues = new Set(searchValues);
-    searchEl.value = [...searchValues].join(' ');
-  };
+  const changeTopLayout = () => {
+    document.querySelector('.btn-show-achievements').remove();
+    const titleEl = document.querySelector('.title-bar');
+    const infoEl = document.querySelector('.profile .info');
+    const leagueSelectEl = document.querySelector('.challenge-list.poeForm');
+    leagueSelectEl.classList.add('settings-option');
+    titleEl.textContent = `${infoEl.textContent}`;
+    infoEl.textContent = '';
+    infoEl.insertAdjacentHTML('beforeend', '<div class="settings"></div>');
+    const settingsEl = infoEl.querySelector('.settings');
 
-  const addSettingsHTML = () => {
-    const settingsContainer = document.querySelector('.profile .info');
-    settingsContainer.insertAdjacentHTML(
-      'beforeend',
-      '<div class="settings"></div>'
-    );
-    const settingsEl = settingsContainer.querySelector('.settings');
     const searchInputEl = insertSearchInputEl(settingsEl);
+    settingsEl.insertAdjacentElement('beforeend', leagueSelectEl);
     const hideButtonEl = insertHideButtonEl(settingsEl);
     const clearButtonEl = insertClearButtonEl(settingsEl);
+    titleEl.textContent = titleEl.textContent.replace('Challenges', '').trim();
+    settingsEl.insertAdjacentElement('beforeend', titleEl);
+
     searchInputEl.addEventListener('input', event => {
       searchChallHandler(event);
     });
     searchInputEl.addEventListener('change', event => {
-      formatSearchInputValue(event);
+      formatSearchInputHandler(event);
     });
     hideButtonEl.addEventListener('click', event => {
       clickHideButtonHandler(event);
@@ -525,7 +569,7 @@
 
   const init = () => {
     getStateFromLS();
-    addSettingsHTML();
+    changeTopLayout();
     processChallenges();
   };
 
