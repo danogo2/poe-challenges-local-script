@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         PoE Challenges
+// @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.002.001
-// @updateURL       https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
+// @version      000.003.000
+// @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
 // @author       danogo
@@ -76,7 +76,8 @@
   align-items: stretch;
 }
 
-.input-search {
+.input-search,
+.tag-select {
   background-color: rgba(42, 42, 42, 0.9);
   border: 3px solid #1d1d1c;
   border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
@@ -86,9 +87,15 @@
   padding: 3px;
   font-size: 0.8rem;
   max-width: 160px;
+  height: 100%;
 }
 
-.input-search::placeholder {
+.tag-select {
+  width: 160px;
+}
+
+.input-search::placeholder,
+.tag-select::placeholder {
   color: #beb69888;
   font-size: 0.8rem;
   padding-left: 0;
@@ -135,6 +142,7 @@
 
 .hidden,
 .search-hidden,
+.tag-hidden,
 .hide-completed .achievement:not(.incomplete) {
   display: none;
 }
@@ -153,7 +161,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 12px;
+  font-size: 11px;
   height: 40px;
 }
 
@@ -166,6 +174,12 @@
   padding-left: 90px;
   justify-self: end;
   line-height: 40px;
+}
+
+.achievement-header h2:first-child {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
 }
 
 .profile
@@ -193,6 +207,26 @@
   align-items: center;
   padding-right: 26px;
 }
+/* challenge tag input */
+.input-tag {
+  background-color: transparent;
+  border: none;
+  color: #989898;
+  margin: 0 10px;
+  align-self: center;
+  flex-grow: 1;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.input-tag:focus {
+  outline: 1px solid #989898;
+}
+
+.input-tag::placeholder {
+  color: #beb69888;
+}
+
 /* unhide challenge details */
 .profile
   .profile-container
@@ -271,11 +305,15 @@
   display: none;
 }
 
+.note-textarea::placeholder {
+  color: #beb69888;
+}
+
 .inner-block {
   display: block;
 }
 
-      `);
+`);
 
   const svgIconEye =
     '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><circle cx="256" cy="256" r="64" fill="#beb698"/><path fill="#beb698" d="M490.84 238.6c-26.46-40.92-60.79-75.68-99.27-100.53C349 110.55 302 96 255.66 96c-42.52 0-84.33 12.15-124.27 36.11-40.73 24.43-77.63 60.12-109.68 106.07a31.92 31.92 0 00-.64 35.54c26.41 41.33 60.4 76.14 98.28 100.65C162 402 207.9 416 255.66 416c46.71 0 93.81-14.43 136.2-41.72 38.46-24.77 72.72-59.66 99.08-100.92a32.2 32.2 0 00-.1-34.76zM256 352a96 96 0 1196-96 96.11 96.11 0 01-96 96z"/></svg>';
@@ -293,6 +331,28 @@
     allTagsSet: new Set(),
     league: document.querySelector('select[name="season"]').value,
     hideCompleted: false,
+    lastSelectedTagValue: '',
+    defaultTags: [
+      ['vendor', 'buy', 'recipe'],
+      ['lab', 'labyrinth'],
+      [
+        'boss',
+        'atziri',
+        'cortex',
+        'the elder',
+        'the shaper',
+        'the maven',
+        'catarina',
+        'the infinite hunger',
+        'the eater of worlds',
+      ],
+      ['affliction', 'wildwood', 'wisp'],
+      ['shrine'],
+      ['essence'],
+      ['einhar', 'beast'],
+      ['delirium'],
+      ['torment', 'touched', 'possessed'],
+    ],
   };
 
   const getStateFromLS = () => {
@@ -334,28 +394,20 @@
     return parentEl.querySelector('.button-clear');
   };
 
-  // TODO: add tag input
-  // const insertTagInputEl = (headerEl, id, challObj) => {
-  //   headerEl.insertAdjacentHTML(
-  //     'beforeend',
-  //     `<input type="text" class="input-tag" placeholder="tag1, tag2, tag3.." data-id="${id}"/>`
-  //   );
-  //   const curChalTags = challObj.tags;
-  //   if (curChalTags.length === 0) return;
-  //   for (let tag of curChalTags) {
-  //     state.allTagsSet.add(tag);
-  //   }
-  //   const tagsString = curChalTags.join(', ');
-  //   headerEl.querySelector('.input-tag').value = tagsString;
-  // };
-  // TODO: add tag dropdown
-
   const insertTagSelectEl = parentEl => {
     parentEl.insertAdjacentHTML(
       'beforeend',
-      '<div class="settings-option"><select name="tags" id="tags"><option class="tag-option" value="">---</option></select></div>'
+      '<div class="settings-option"><select class="tag-select" name="tags" id="tags"><option class="tag-option" value="">— — —</option></select></div>'
     );
     return parentEl.querySelector('#tags');
+  };
+
+  const insertTagInputEl = (parentEl, id) => {
+    parentEl.insertAdjacentHTML(
+      'beforeend',
+      `<input type="text" class="input-tag" placeholder="tag1, tag2, tag3.." data-id="${id}"/>`
+    );
+    return parentEl.querySelector('.input-tag');
   };
 
   const insertNoteTextareaEl = (parentEl, id) => {
@@ -366,106 +418,60 @@
     return parentEl.querySelector('.note-textarea');
   };
 
-  const noteChangeHandler = event => {
-    const textareaEl = event.target;
-    const formattedNote = textareaEl.value.trim();
-    textareaEl.value = formattedNote;
-    const id = Number(textareaEl.dataset.id);
-    const chall = state.challObjMap.get(id);
-    chall.note = formattedNote;
-    updateLS();
+  // using this method because {element.innerHTML = ''}doesn't clear event handlers of the child nodes and might cause memory leak
+  const removeAllChildNodes = parent => {
+    while (parent.firstChild) {
+      parent.removeChild(parent.firstChild);
+    }
   };
 
-  const changeChallStyle = (id, challEl) => {
-    // create header
-    const headerEl = challEl.querySelector('h2');
-    headerEl.textContent = `${id}. ${headerEl.textContent}`;
-    const completionEl = challEl.querySelector('.completion-detail');
-    const completionImgEl = challEl.querySelector('img.completion');
-    let detailEl = challEl.querySelector('.detail');
-    challEl.innerHTML = `<div class="achievement-header"></div>`;
-    const headerContainerEl = challEl.querySelector('.achievement-header');
-    headerContainerEl.insertAdjacentElement('beforeend', headerEl);
-    if (completionEl) {
-      headerContainerEl.insertAdjacentElement('beforeend', completionEl);
-      completionEl.insertAdjacentElement('beforeend', completionImgEl);
-    } else {
-      headerContainerEl.insertAdjacentElement('beforeend', completionImgEl);
-      completionImgEl.style.paddingRight = '26px';
+  // need to run on every tag input change
+  const resetTagsSet = () => {
+    state.allTagsSet.clear();
+    for (let challObj of state.challObjMap.values()) {
+      for (let tag of challObj.tags) {
+        state.allTagsSet.add(tag);
+      }
     }
-    // fix bug where is no detail el
-    if (!detailEl) {
-      challEl.insertAdjacentHTML(
+  };
+
+  // need to run on every tag input change
+  const updateTagsDropdownHTML = () => {
+    // has to run after changing tag inputs
+    const selectEl = document.querySelector('.tag-select');
+    removeAllChildNodes(selectEl);
+    resetTagsSet();
+    selectEl.insertAdjacentHTML(
+      'afterbegin',
+      '<option class="tag-option" value="">— — —</option>'
+    );
+    for (let tag of state.allTagsSet.values()) {
+      selectEl.insertAdjacentHTML(
         'beforeend',
-        `<div class='detail'>
-            <div class='detail-inner'>
-              <span class='text'></span>
-            </div>
-          </div>`
+        `<option class="tag-option" value="${tag}">${tag}</option>`
       );
-      detailEl = challEl.querySelector('.detail');
     }
-    // add detail element
-    challEl.insertAdjacentElement('beforeend', detailEl);
-    // note input
-    const taskList = challEl.querySelector('.items');
-    let textareaEl;
-    if (taskList) {
-      textareaEl = insertNoteTextareaEl(taskList, id);
+    let selectedTagIndex;
+
+    if (!state.allTagsSet.has(state.lastSelectedTagValue)) {
+      // none chall has currently selected tag
+      selectEl.selectedIndex = 0;
+      for (let challEl of state.challElMap.values()) {
+        challEl.classList.remove('tag-hidden');
+      }
+      state.lastSelectedTagValue = '';
     } else {
-      const detailInnerEl = challEl.querySelector('.detail-inner');
-      detailEl.querySelector('.text').classList.add('inner-block');
-      textareaEl = insertNoteTextareaEl(detailInnerEl, id);
-    }
-    textareaEl.addEventListener('change', event => {
-      noteChangeHandler(event);
-    });
-  };
-
-  const getChallengeSearchChars = challEl => {
-    const header = challEl.querySelector('h2');
-    const singleTask = challEl.querySelector('.text');
-    const subTasks = challEl.querySelectorAll('.items ul li');
-    let subTasksString;
-    if (subTasks.length !== 0) {
-      subTasksString = [...subTasks].map(taskEl => taskEl.textContent).join('');
-    } else {
-      subTasksString = '';
+      let i = 0;
+      for (let option of selectEl.options) {
+        if (option.value === state.lastSelectedTagValue) {
+          selectedTagIndex = i;
+        }
+        i++;
+      }
     }
 
-    const searchChars =
-      header.textContent + singleTask.textContent + subTasksString;
-
-    return searchChars.trim().toLowerCase();
-  };
-
-  const createChallObj = (id, challEl) => {
-    const newChallObj = {
-      note: '',
-      tags: [],
-      searchChars: getChallengeSearchChars(challEl),
-    };
-    state.challObjMap.set(id, newChallObj);
-  };
-
-  const updateChallEl = (id, challEl) => {
-    const challObj = state.challObjMap.get(id);
-    // in case they are changing challenge text
-    const searchChars = getChallengeSearchChars(challEl);
-    challEl.querySelector('.note-textarea').value = challObj.note;
-    challObj.searchChars = searchChars;
-  };
-
-  const processChallenges = () => {
-    const challListEl = document.querySelectorAll('.achievement');
-    for (let [index, challEl] of challListEl.entries()) {
-      const id = index + 1;
-      state.challElMap.set(id, challEl);
-      changeChallStyle(id, challEl);
-      state.challsGotLoaded
-        ? updateChallEl(id, challEl)
-        : createChallObj(id, challEl);
-    }
+    selectEl.selectedIndex = selectedTagIndex;
+    updateLS();
   };
 
   const testAllValues = (testValues, str) => {
@@ -513,6 +519,25 @@
     searchEl.value = [...searchValues].join(' ');
   };
 
+  const selectTagHandler = event => {
+    const selectedTagValue = event.target.value;
+    const selectedTagIndex = event.target.selectedIndex;
+    state.lastSelectedTagValue = selectedTagValue;
+    // hide challenges without selected tag
+    for (let [id, challObj] of state.challObjMap.entries()) {
+      const challEl = state.challElMap.get(id);
+      if (
+        selectedTagIndex !== 0 &&
+        challObj.tags.indexOf(selectedTagValue) === -1
+      ) {
+        challEl.classList.add('tag-hidden');
+      } else {
+        // show chall if default value is selected('') or has selected tag
+        challEl.classList.remove('tag-hidden');
+      }
+    }
+  };
+
   const clickHideButtonHandler = event => {
     state.hideCompleted = !state.hideCompleted;
     const challengeContainerEl = document.querySelector(
@@ -535,6 +560,10 @@
     }
   };
 
+  const addEventHandler = (element, eventType, handler) => {
+    element.addEventListener(eventType, event => handler(event));
+  };
+
   const changeTopLayout = () => {
     document.querySelector('.btn-show-achievements').remove();
     const titleEl = document.querySelector('.title-bar');
@@ -547,30 +576,214 @@
     const settingsEl = infoEl.querySelector('.settings');
 
     const searchInputEl = insertSearchInputEl(settingsEl);
+    const tagSelectEl = insertTagSelectEl(settingsEl);
     settingsEl.insertAdjacentElement('beforeend', leagueSelectEl);
     const hideButtonEl = insertHideButtonEl(settingsEl);
     const clearButtonEl = insertClearButtonEl(settingsEl);
     titleEl.textContent = titleEl.textContent.replace('Challenges', '').trim();
     settingsEl.insertAdjacentElement('beforeend', titleEl);
 
-    searchInputEl.addEventListener('input', event => {
-      searchChallHandler(event);
-    });
-    searchInputEl.addEventListener('change', event => {
-      formatSearchInputHandler(event);
-    });
-    hideButtonEl.addEventListener('click', event => {
-      clickHideButtonHandler(event);
-    });
-    clearButtonEl.addEventListener('click', event => {
-      clickClearButtonHandler(event);
+    addEventHandler(searchInputEl, 'input', searchChallHandler);
+    addEventHandler(searchInputEl, 'change', formatSearchInputHandler);
+    addEventHandler(tagSelectEl, 'change', selectTagHandler);
+    addEventHandler(hideButtonEl, 'click', clickHideButtonHandler);
+    addEventHandler(clearButtonEl, 'click', clickClearButtonHandler);
+  };
+
+  const changeChallStyle = (id, challEl) => {
+    // create header
+    const headerEl = challEl.querySelector('h2');
+    headerEl.textContent = `${id}. ${headerEl.textContent}`;
+    const completionEl = challEl.querySelector('.completion-detail');
+    const completionImgEl = challEl.querySelector('img.completion');
+    let detailEl = challEl.querySelector('.detail');
+    challEl.innerHTML = `<div class="achievement-header"></div>`;
+    const headerContainerEl = challEl.querySelector('.achievement-header');
+    headerContainerEl.insertAdjacentElement('beforeend', headerEl);
+    if (completionEl) {
+      headerContainerEl.insertAdjacentElement('beforeend', completionEl);
+      completionEl.insertAdjacentElement('beforeend', completionImgEl);
+    } else {
+      headerContainerEl.insertAdjacentElement('beforeend', completionImgEl);
+      completionImgEl.style.paddingRight = '26px';
+    }
+    // fix bug where is no detail el
+    if (!detailEl) {
+      challEl.insertAdjacentHTML(
+        'beforeend',
+        `<div class='detail'>
+            <div class='detail-inner'>
+              <span class='text'></span>
+            </div>
+          </div>`
+      );
+      detailEl = challEl.querySelector('.detail');
+    }
+    // add detail element
+    challEl.insertAdjacentElement('beforeend', detailEl);
+    // add tag input
+    insertTagInputEl(headerEl, id);
+    // add note input
+    const taskList = challEl.querySelector('.items');
+    if (taskList) {
+      insertNoteTextareaEl(taskList, id);
+    } else {
+      const detailInnerEl = challEl.querySelector('.detail-inner');
+      detailEl.querySelector('.text').classList.add('inner-block');
+      insertNoteTextareaEl(detailInnerEl, id);
+    }
+  };
+
+  const getChallengeSearchChars = challEl => {
+    const header = challEl.querySelector('h2');
+    const singleTask = challEl.querySelector('.text');
+    const subTasks = challEl.querySelectorAll('.items ul li');
+    let subTasksString;
+    if (subTasks.length !== 0) {
+      subTasksString = [...subTasks]
+        .map(taskEl => taskEl.textContent)
+        .join(' ');
+    } else {
+      subTasksString = '';
+    }
+
+    const searchChars = (
+      header.textContent +
+      ' ' +
+      singleTask.textContent +
+      ' ' +
+      subTasksString
+    )
+      .trim()
+      .toLowerCase();
+    return searchChars;
+  };
+
+  const getDefaultTagsFromText = challText => {
+    const defaultTags = [];
+    for (let tagArray of state.defaultTags) {
+      if (tagArray.some(key => challText.indexOf(key) !== -1))
+        defaultTags.push(tagArray[0]);
+      state.allTagsSet.add(tagArray[0]);
+    }
+    return defaultTags;
+  };
+
+  const createChallObj = (id, challEl) => {
+    const challText = getChallengeSearchChars(challEl);
+    const challDefaultTags = getDefaultTagsFromText(challText);
+    const newChallObj = {
+      searchChars: challText,
+      note: '',
+      defaultTags: challDefaultTags,
+      customTags: [],
+      tags: [...challDefaultTags],
+    };
+    state.challObjMap.set(id, newChallObj);
+    // add tags to chall tag input when there is no local storage fetch
+    const tagInputEl = challEl.querySelector('.input-tag');
+    const tagsString = newChallObj.tags.join(', ');
+    tagInputEl.value = tagsString;
+  };
+
+  const updateChallEl = (id, challEl) => {
+    const challObj = state.challObjMap.get(id);
+    // HACK: temporary fix for local storage hax not having default and custom tags
+    if (!challObj.customTags) challObj.customTags = [];
+    // in case they are changing challenge text
+    const challText = getChallengeSearchChars(challEl);
+    challObj.searchChars = challText;
+    const noteTextareaEl = challEl.querySelector('.note-textarea');
+    noteTextareaEl.value = challObj.note;
+    // in case of initial tags update or initial tags removal
+    const challDefaultTags = getDefaultTagsFromText(challText);
+    challObj.defaultTags = challDefaultTags;
+    // new Set for removing duplicated tags
+    const challUpdatedTags = [
+      ...new Set([...challDefaultTags, ...challObj.tags]),
+    ];
+    challObj.tags = challUpdatedTags;
+    for (let tag of challUpdatedTags) {
+      state.allTagsSet.add(tag);
+    }
+    const tagInputEl = challEl.querySelector('.input-tag');
+    const tagsString = challUpdatedTags.join(', ');
+    tagInputEl.value = tagsString;
+  };
+
+  const processChallenges = () => {
+    const challListEl = document.querySelectorAll('.achievement');
+    for (let [index, challEl] of challListEl.entries()) {
+      const id = index + 1;
+      state.challElMap.set(id, challEl);
+      changeChallStyle(id, challEl);
+      state.challsGotLoaded
+        ? updateChallEl(id, challEl)
+        : createChallObj(id, challEl);
+    }
+  };
+
+  // multi element events
+  const tagInputHandler = event => {
+    const tagInputEl = event.target;
+    const inputValue = tagInputEl.value;
+    const challId = Number(tagInputEl.dataset.id);
+    const challObj = state.challObjMap.get(challId);
+    let enteredTags = inputValue.length ? inputValue.match(/[^\s,]+/g) : [];
+    // create Set from array to get rid of duplicates
+    const curChallTagsSet = new Set([...enteredTags, ...challObj.defaultTags]);
+    enteredTags = [...curChallTagsSet];
+    // tag max length: 16 characters
+    const formattedTags = enteredTags.map(tag => tag.slice(0, 16));
+
+    challObj.tags = [];
+    for (let tag of formattedTags) {
+      challObj.tags.push(tag);
+      // no need to add to allTags set because allTags will be updated in updateTagsDropdownHTML()
+    }
+    tagInputEl.value = formattedTags.join(', ');
+
+    updateTagsDropdownHTML();
+    // hide challenge after deleting currently selected tag from its tag input
+    if (
+      state.lastSelectedTagValue !== '' &&
+      !curChallTagsSet.has(state.lastSelectedTagValue)
+    ) {
+      state.challElMap.get(challId).classList.add('tag-hidden');
+    }
+    updateLS();
+  };
+
+  const noteChangeHandler = event => {
+    const textareaEl = event.target;
+    const formattedNote = textareaEl.value.trim();
+    textareaEl.value = formattedNote;
+    const id = Number(textareaEl.dataset.id);
+    const chall = state.challObjMap.get(id);
+    chall.note = formattedNote;
+    updateLS();
+  };
+
+  const delegateEventHandlers = () => {
+    const challsContainerEl = document.querySelector('.achievement-list');
+    challsContainerEl.addEventListener('change', event => {
+      // event delegation
+      const target = event.target;
+      if (target.classList.contains('input-tag')) {
+        tagInputHandler(event);
+      }
+      if (target.classList.contains('note-textarea')) {
+        noteChangeHandler(event);
+      }
     });
   };
 
   const init = () => {
     getStateFromLS();
-    changeTopLayout();
     processChallenges();
+    changeTopLayout();
+    delegateEventHandlers();
+    updateTagsDropdownHTML();
   };
 
   init();
