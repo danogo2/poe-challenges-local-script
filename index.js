@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.004.004
+// @version      000.004.005
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -381,7 +381,7 @@
       ['affliction', 'wildwood', 'wisp'],
       ['shrine'],
       ['essence'],
-      ['einhar', 'beast'],
+      ['einhar', 'beasts'],
       ['delirium'],
       ['torment', 'touched', 'possessed'],
     ],
@@ -429,7 +429,7 @@
   const insertTagSelectEl = parentEl => {
     parentEl.insertAdjacentHTML(
       'beforeend',
-      '<div class="settings-option"><select class="tag-select" name="tags" id="tags"><option class="tag-option" value="">— — —</option></select></div>'
+      '<div class="settings-option"><select class="tag-select" name="tags" id="tags"><option class="tag-option" value="">— Tags —</option></select></div>'
     );
     return parentEl.querySelector('#tags');
   };
@@ -475,9 +475,13 @@
     resetTagsSet();
     selectEl.insertAdjacentHTML(
       'afterbegin',
-      '<option class="tag-option" value="">— — —</option>'
+      '<option class="tag-option" value="">— tags —</option>'
     );
-    for (let tag of state.allTagsSet.values()) {
+    const sortedTagsArray = [...state.allTagsSet.values()].sort((a, b) =>
+      a.localeCompare(b)
+    );
+
+    for (let tag of sortedTagsArray) {
       selectEl.insertAdjacentHTML(
         'beforeend',
         `<option class="tag-option" value="${tag}">${tag}</option>`
@@ -695,9 +699,10 @@
   const getDefaultTagsFromText = challText => {
     const defaultTags = [];
     for (let tagArray of state.defaultTags) {
-      if (tagArray.some(key => challText.indexOf(key) !== -1))
+      if (tagArray.some(key => challText.indexOf(key) !== -1)) {
         defaultTags.push(tagArray[0]);
-      state.allTagsSet.add(tagArray[0]);
+        state.allTagsSet.add(tagArray[0]);
+      }
     }
     return defaultTags;
   };
@@ -721,8 +726,6 @@
 
   const updateChallEl = (id, challEl) => {
     const challObj = state.challObjMap.get(id);
-    // HACK: temporary fix for local storage hax not having default and custom tags
-    if (!challObj.customTags) challObj.customTags = [];
     // in case they are changing challenge text
     const challText = getChallengeSearchChars(challEl);
     challObj.searchChars = challText;
