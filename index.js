@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.004.003
+// @version      000.004.004
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -732,9 +732,7 @@
     const challDefaultTags = getDefaultTagsFromText(challText);
     challObj.defaultTags = challDefaultTags;
     // new Set for removing duplicated tags
-    const challUpdatedTags = [
-      ...new Set([...challDefaultTags, ...challObj.tags]),
-    ];
+    const challUpdatedTags = [...new Set([...challObj.tags])];
     challObj.tags = challUpdatedTags;
     for (let tag of challUpdatedTags) {
       state.allTagsSet.add(tag);
@@ -759,12 +757,14 @@
   // multi element events
   const tagInputHandler = event => {
     const tagInputEl = event.target;
-    const inputValue = tagInputEl.value;
+    const inputValue = tagInputEl.value.trim();
     const challId = Number(tagInputEl.dataset.id);
     const challObj = state.challObjMap.get(challId);
-    let enteredTags = inputValue.length ? inputValue.match(/[^\s,]+/g) : [];
+    let enteredTags = inputValue.length
+      ? inputValue.match(/[^\s,]+/g)
+      : [...challObj.defaultTags];
     // create Set from array to get rid of duplicates
-    const curChallTagsSet = new Set([...enteredTags, ...challObj.defaultTags]);
+    const curChallTagsSet = new Set([...enteredTags]);
     enteredTags = [...curChallTagsSet];
     // tag max length: 16 characters
     const formattedTags = enteredTags.map(tag => tag.slice(0, 16));
