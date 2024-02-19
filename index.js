@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.003.000
+// @version      000.003.001
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -101,7 +101,8 @@
   padding-left: 0;
 }
 
-.input-search:focus {
+.input-search:focus,
+.tag-select:focus {
   outline: none;
   border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
     3 3 3 3 repeat;
@@ -312,7 +313,6 @@
 .inner-block {
   display: block;
 }
-
 `);
 
   const svgIconEye =
