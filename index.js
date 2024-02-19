@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.003.001
+// @version      000.003.002
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -106,6 +106,11 @@
   outline: none;
   border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
     3 3 3 3 repeat;
+}
+
+.tag-select,
+.league-select {
+  cursor: pointer;
 }
 
 /* hide toggle button */
@@ -313,6 +318,7 @@
 .inner-block {
   display: block;
 }
+
 `);
 
   const svgIconEye =
@@ -570,6 +576,7 @@
     const infoEl = document.querySelector('.profile .info');
     const leagueSelectEl = document.querySelector('.challenge-list.poeForm');
     leagueSelectEl.classList.add('settings-option');
+    leagueSelectEl.querySelector('select').classList.add('league-select');
     titleEl.textContent = `${infoEl.textContent}`;
     infoEl.textContent = '';
     infoEl.insertAdjacentHTML('beforeend', '<div class="settings"></div>');
