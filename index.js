@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.004.001
+// @version      000.004.002
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -26,10 +26,11 @@
 }
 
 .profile .title-bar {
-  padding-right: 10px;
   display: block;
   align-self: center;
   margin: 0;
+  flex-grow: 1;
+  text-align: right;
 }
 
 .profile .title-bar::first-letter {
