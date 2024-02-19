@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.004.005
+// @version      000.004.006
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -699,9 +699,9 @@
   const getDefaultTagsFromText = challText => {
     const defaultTags = [];
     for (let tagArray of state.defaultTags) {
-      if (tagArray.some(key => challText.indexOf(key) !== -1)) {
-        defaultTags.push(tagArray[0]);
-        state.allTagsSet.add(tagArray[0]);
+      if (tagArray.some(key => challText.indexOf(key.toLowerCase()) !== -1)) {
+        defaultTags.push(tagArray[0].toLowerCase());
+        state.allTagsSet.add(tagArray[0].toLowerCase());
       }
     }
     return defaultTags;
@@ -760,7 +760,7 @@
   // multi element events
   const tagInputHandler = event => {
     const tagInputEl = event.target;
-    const inputValue = tagInputEl.value.trim();
+    const inputValue = tagInputEl.value.trim().toLowerCase();
     const challId = Number(tagInputEl.dataset.id);
     const challObj = state.challObjMap.get(challId);
     let enteredTags = inputValue.length
