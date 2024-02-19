@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.003.002
+// @version      000.004.000
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -68,12 +68,34 @@
   display: none;
 }
 
+.stickyOffsetMargin {
+  padding-top: 39px;
+}
+
+.info.sticky {
+  position: fixed;
+  top: 0;
+  z-index: 1;
+  background-color: #181818f0;
+  box-sizing: border-box;
+  width: 922px;
+  padding: 4px 10px;
+  transform: translateX(-17px);
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border: 2px solid #282828;
+}
+
 /* adding settings */
 .settings {
   display: flex;
   padding: 5px 0;
   gap: 2%;
   align-items: stretch;
+}
+
+.sticky .settings {
+  padding: 5px 7px;
 }
 
 .input-search,
@@ -785,12 +807,47 @@
     });
   };
 
+  const makeInfoNavSticky = () => {
+    // get coords relative to document (viewport + current scroll)
+    function getCoords(elem) {
+      // coords relative to the viewport
+      let box = elem.getBoundingClientRect();
+
+      return {
+        top: box.top + window.scrollY,
+        right: box.right + window.scrollX,
+        bottom: box.bottom + window.scrollY,
+        left: box.left + window.scrollX,
+      };
+    }
+    const container = document.querySelector('.achievement-container');
+    const nav = container.querySelector('.info');
+    const containerCoords = getCoords(container);
+    const containerTop = containerCoords.top;
+
+    const makeSticky = () => {
+      let scrollPos = window.scrollY;
+      if (scrollPos > containerTop) {
+        nav.classList.add('sticky');
+        container.classList.add('stickyOffsetMargin');
+      } else {
+        nav.classList.remove('sticky');
+        container.classList.remove('stickyOffsetMargin');
+      }
+    };
+    makeSticky();
+    window.addEventListener('scroll', event => {
+      makeSticky();
+    });
+  };
+
   const init = () => {
     getStateFromLS();
     processChallenges();
     changeTopLayout();
     delegateEventHandlers();
     updateTagsDropdownHTML();
+    makeInfoNavSticky();
   };
 
   init();
