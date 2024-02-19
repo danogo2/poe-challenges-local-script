@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.004.002
+// @version      000.004.003
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -46,11 +46,14 @@
 .profile .profile-container,
 .profile .profile-container .container-top {
   width: 100%;
+  box-sizing: border-box;
+  padding-right: 2px;
 }
 
 .profile .profile-container .achievement-container .achievement-list {
   width: 100%;
   margin-top: 6px;
+  box-sizing: border-box;
 }
 
 .profile .profile-container .container-top {
@@ -80,11 +83,12 @@
   background-color: #181818f0;
   box-sizing: border-box;
   width: 922px;
-  padding: 4px 10px;
+  padding: 4px 9px;
   transform: translateX(-17px);
   border-bottom-left-radius: 6px;
   border-bottom-right-radius: 6px;
   border: 2px solid #282828;
+  margin-left: 1px;
 }
 
 /* adding settings */
