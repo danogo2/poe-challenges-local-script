@@ -691,10 +691,25 @@
     searchEl.value = [...searchValues].join(' ');
   };
 
+  const getCoords = elem => {
+    // coords relative to the viewport
+    let box = elem.getBoundingClientRect();
+
+    return {
+      top: box.top + window.scrollY,
+      right: box.right + window.scrollX,
+      bottom: box.bottom + window.scrollY,
+      left: box.left + window.scrollX,
+    };
+  };
+
   const scrollToTop = () => {
+    const achievementContainerTop = getCoords(
+      document.querySelector('.achievement-container')
+    ).top;
     if (document.querySelector('.info').classList.contains('sticky')) {
       window.scrollTo({
-        top: 0,
+        top: achievementContainerTop,
         behavior: 'smooth',
       });
     }
@@ -1021,17 +1036,7 @@
 
   const makeInfoNavSticky = () => {
     // get coords relative to document (viewport + current scroll)
-    function getCoords(elem) {
-      // coords relative to the viewport
-      let box = elem.getBoundingClientRect();
 
-      return {
-        top: box.top + window.scrollY,
-        right: box.right + window.scrollX,
-        bottom: box.bottom + window.scrollY,
-        left: box.left + window.scrollX,
-      };
-    }
     const container = document.querySelector('.achievement-container');
     const nav = container.querySelector('.info');
     const containerCoords = getCoords(container);
