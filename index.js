@@ -691,6 +691,13 @@
     searchEl.value = [...searchValues].join(' ');
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth',
+    });
+  };
+
   const selectTagHandler = event => {
     const selectedTagValue = event.target.value;
     const selectedTagIndex = event.target.selectedIndex;
@@ -708,6 +715,7 @@
         challEl.classList.add('tag-hidden');
       }
     }
+    scrollToTop();
   };
 
   const clickHideButtonHandler = event => {
@@ -882,8 +890,9 @@
 
     for (let defaultTag of challObj.defaultTags) {
       if (state.updatedDefaultTags.has(defaultTag)) {
-        if (!challObj.tags.some(tagObj => tagObj.name === defaultTag))
+        if (!challObj.tags.some(tagObj => tagObj.name === defaultTag)) {
           challObj.tags.push({ name: defaultTag, type: 'default' });
+        }
       }
     }
   };
