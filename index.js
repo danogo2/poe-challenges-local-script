@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.006
+// @version      000.005.007
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -16,532 +16,546 @@
   'use strict';
   GM_addStyle(`
   /* adjusting layout */
-  .profile {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .profile .profile-top {
-    height: 30px;
-  }
-  
-  .profile .title-bar {
-    display: block;
-    align-self: center;
-    margin: 0;
-    flex-grow: 1;
-    text-align: right;
-  }
-  
-  .profile .title-bar::first-letter {
-    text-transform: uppercase;
-  }
-  
-  .challenge-list.poeForm form,
-  .challenge-list.poeForm form select {
-    height: 100%;
-    max-width: 160px;
-  }
-  
-  .profile .profile-container,
-  .profile .profile-container .container-top {
-    width: 100%;
-    box-sizing: border-box;
-    padding-right: 2px;
-  }
-  
-  .profile .profile-container .achievement-container .achievement-list {
-    width: 100%;
-    margin-top: 6px;
-    box-sizing: border-box;
-  }
-  
-  .profile .profile-container .container-top {
-    background-size: cover;
-  }
-  
-  .profile .profile-details,
-  .profile .progress-bar-container.large,
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    .challenge-progress-bar-container {
-    display: none;
-  }
-  
-  .stickyOffsetMargin {
-    padding-top: 39px;
-  }
-  
-  .info.sticky {
-    position: fixed;
-    top: 0;
-    z-index: 1;
-    background-color: #181818f0;
-    box-sizing: border-box;
-    width: 922px;
-    padding: 4px 9px;
-    transform: translateX(-17px);
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-    border: 2px solid #282828;
-    margin-left: 1px;
-  }
-  
-  /* adding settings */
-  .settings {
-    display: flex;
-    padding: 5px 0;
-    gap: 2%;
-    align-items: stretch;
-  }
-  
-  .sticky .settings {
-    padding: 5px 5px;
-  }
-  
-  .input-search,
-  .tag-select {
-    background-color: rgba(42, 42, 42, 0.9);
-    border: 3px solid #1d1d1c;
-    border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
-      3 3 3 3 repeat;
-    color: #beb698;
-    box-sizing: border-box;
-    padding: 3px;
-    font-size: 0.8rem;
-    max-width: 160px;
-    height: 100%;
-  }
-  
-  .tag-select {
-    width: 160px;
-  }
-  
-  .input-search::placeholder,
-  .tag-select::placeholder {
-    color: #beb69888;
-    font-size: 0.8rem;
-    padding-left: 0;
-  }
-  
-  .input-search:focus,
-  .tag-select:focus {
-    outline: none;
-    border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
-      3 3 3 3 repeat;
-  }
-  
-  .tag-select,
-  .league-select {
-    cursor: pointer;
-  }
-  
-  option.tag-custom {
-    color: rgb(0, 182, 255);
-  }
-  
-  .side-notes {
-    /* 17px is a scrollbar width */
-    max-height: 100vh;
-    width: calc((100vw - 1012px - 17px) / 2);
-    background-color: #181818f0;
-    border: 2px solid #282828;
-    z-index: 1;
-    box-sizing: border-box;
-    top: 0;
-    left: 0;
-    position: fixed;
-    overflow-x: hidden;
-    padding: 0;
-    display: none;
-  }
-  
-  .side-notes.hide-notes {
-    width: auto;
-  }
-  
-  .side-notes.hide-notes .side-settings {
-    gap: 0;
-  }
-  
-  .side-notes:has(*.side-challenge:not(.hidden)) {
-    display: block;
-  }
-  
-  .side-notes::-webkit-scrollbar {
-    width: 10px;
-  }
-  
-  .side-notes::-webkit-scrollbar-track {
-    background: #222;
-  }
-  
-  .side-notes::-webkit-scrollbar-thumb {
-    background: #444;
-  }
-  
-  .side-notes::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-  
-  .side-notes.right {
-    right: 0;
-    left: auto;
-    border-bottom-left-radius: 6px;
-  }
-  
-  .side-notes:not(.right) {
-    border-bottom-right-radius: 6px;
-  }
-  
-  .side-nav {
-    display: flex;
-    justify-content: space-between;
-    background-color: #282828;
-    padding: 12px;
-    align-items: center;
-  }
-  
-  .right .side-nav {
-    flex-direction: row-reverse;
-  }
-  
-  .side-header {
-    font-size: 16px;
-    flex-grow: 1;
-    text-align: center;
-  }
-  
-  .side-settings {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .right .side-settings {
-    flex-direction: row-reverse;
-  }
-  
-  .side-challenges {
-    padding: 0 12px;
-  }
-  
-  .side-challenges:has(> :not(.hidden)) {
-    padding-top: 12px;
-    padding-bottom: 12px;
-  }
-  
-  .hide-notes .side-challenges,
-  .hide-completed .side-challenges {
-    display: none;
-  }
-  
-  .hide-completed .side-challenges:has(> .incomplete:not(.hidden)) {
-    display: list-item;
-  }
-  
-  .side-challenge {
-    padding-top: 6px;
-  }
-  
-  .side-challenge-header {
-    font-size: 12px;
-    display: flex;
-    cursor: pointer;
-    align-items: center;
-  }
-  
-  .side-challenge-header:hover {
-    filter: brightness(0.8);
-  }
-  
-  .goto-container {
-    display: flex;
-    height: 100%;
-    margin-left: 10px;
-    align-items: center;
-    visibility: hidden;
-  }
-  
-  .icon-goto {
-    width: 12px;
-    height: 12px;
-  }
-  
-  .side-challenge-header:hover .goto-container {
-    visibility: visible;
-  }
-  
-  .side-note {
-    font-size: 11px;
-    padding: 4px 0 8px 0;
-    white-space: pre-wrap;
-  }
-  
-  .settings-icon.icon-minimize {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .note-completion {
-    flex-grow: 1;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-  
-  .note-completion-check.incomplete {
-    visibility: hidden;
-  }
-  
-  /* hide toggle button */
-  
-  .button-settings {
-    display: flex;
-    height: 100%;
-    align-items: center;
-    background: transparent;
-    border: none;
-    box-sizing: border-box;
-    outline: none;
-    padding: 0;
-  }
-  
-  .button-settings:hover {
-    filter: brightness(0.8);
-  }
-  
-  .settings-icon {
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    align-items: center;
-  }
-  
-  .icon-show-notes {
-    width: 20px;
-    width: 20px;
-  }
-  
-  .icon-show,
-  .icon-show-notes,
-  .hide-completed .icon-hide,
-  .hide-notes .icon-minimize,
-  .hide-notes .arrow-left,
-  .hide-notes .arrow-right,
-  .arrow-left,
-  .side-notes.right .arrow-right,
-  .hide-notes .side-header,
-  .hide-completed .side-challenge.complete {
-    display: none;
-  }
-  
-  .icon-hide,
-  .hide-completed .icon-show,
-  .hide-notes .icon-show-notes,
-  .side-notes.right:not(.hide-notes) .arrow-left {
-    display: flex;
-  }
-  
-  .hidden,
-  .search-hidden,
-  .tag-hidden,
-  .hide-completed .achievement:not(.incomplete) {
-    display: none;
-  }
-  
-  /* challenge box */
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement {
-    width: 100%;
-    background-size: 100% 40px;
-  }
-  
-  .achievement-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    height: 40px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    h2 {
-    padding-left: 90px;
-    justify-self: end;
-    line-height: 40px;
-  }
-  
-  .achievement-header h2:first-child {
-    display: flex;
-    align-items: center;
-    flex-grow: 1;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    img.completion {
-    position: static;
-    width: 32px;
-    height: 32px;
-    margin-left: 10px;
-    margin-right: 10px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    h2.completion-detail {
-    line-height: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    padding-right: 26px;
-  }
-  /* challenge tag input */
-  .input-tag {
-    background-color: transparent;
-    border: none;
-    color: #989898;
-    margin: 0 10px;
-    align-self: center;
-    flex-grow: 1;
-    border-radius: 4px;
-    padding: 4px;
-  }
-  
-  .input-tag:focus {
-    outline: 1px solid #989898;
-  }
-  
-  .input-tag::placeholder {
-    color: #beb69888;
-  }
-  
-  /* unhide challenge details */
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail {
-    display: block;
-    background-size: cover;
-    margin-top: 0;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail-inner {
-    padding-left: 90px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    padding-right: 26px;
-  }
-  
-  .btn-detail {
-    display: none;
-  }
-  
-  .completion {
-    margin-right: 6px;
-  }
-  
-  .items {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 16px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    ul.split {
-    width: 100%;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    ul:not(.split) {
-    grid-column: 1 / span 2;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    span.text {
-    display: block;
-    padding-bottom: 8px;
-    font-size: 14px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    ul
-    li {
-    font-size: 14px;
-  }
-  
-  .note-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    height: 100%;
-    background-color: transparent;
-    resize: none;
-    border: none;
-    color: #989898;
-    padding: 4px;
-    font-size: 0.8rem;
-    border-radius: 4px;
-  }
-  
-  .note-textarea:focus {
-    outline: 1px solid #333;
-  }
-  
-  .note-textarea::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .note-textarea::placeholder {
-    color: #beb69888;
-  }
-  
-  .inner-block {
-    display: block;
-  }
+.profile {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile .profile-top {
+  height: 30px;
+}
+
+.profile .title-bar {
+  display: block;
+  align-self: center;
+  margin: 0;
+  flex-grow: 1;
+  text-align: right;
+}
+
+.profile .title-bar::first-letter {
+  text-transform: uppercase;
+}
+
+.challenge-list.poeForm form,
+.challenge-list.poeForm form select {
+  height: 100%;
+  max-width: 160px;
+}
+
+.profile .profile-container,
+.profile .profile-container .container-top {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 2px;
+}
+
+.profile .profile-container .achievement-container .achievement-list {
+  width: 100%;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.profile .profile-container .container-top {
+  background-size: cover;
+}
+
+.profile .profile-details,
+.profile .progress-bar-container.large,
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  .challenge-progress-bar-container {
+  display: none;
+}
+
+.stickyOffsetMargin {
+  padding-top: 39px;
+}
+
+.info.sticky {
+  position: fixed;
+  top: 0;
+  z-index: 1;
+  background-color: #181818f0;
+  box-sizing: border-box;
+  width: 922px;
+  padding: 4px 9px;
+  transform: translateX(-17px);
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border: 2px solid #282828;
+  margin-left: 1px;
+}
+
+/* adding settings */
+.settings {
+  display: flex;
+  padding: 5px 0;
+  gap: 2%;
+  align-items: stretch;
+}
+
+.sticky .settings {
+  padding: 5px 5px;
+}
+
+.input-search,
+.tag-select {
+  background-color: rgba(42, 42, 42, 0.9);
+  border: 3px solid #1d1d1c;
+  border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
+    3 3 3 3 repeat;
+  color: #beb698;
+  box-sizing: border-box;
+  padding: 3px;
+  font-size: 0.8rem;
+  max-width: 160px;
+  height: 100%;
+}
+
+.tag-select {
+  width: 160px;
+}
+
+.input-search::placeholder,
+.tag-select::placeholder {
+  color: #beb69888;
+  font-size: 0.8rem;
+  padding-left: 0;
+}
+
+.input-search:focus,
+.tag-select:focus {
+  outline: none;
+  border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
+    3 3 3 3 repeat;
+}
+
+.tag-select,
+.league-select {
+  cursor: pointer;
+}
+
+option.tag-custom {
+  color: rgb(0, 182, 255);
+}
+
+.side-notes {
+  /* 17px is a scrollbar width */
+  max-height: 100vh;
+  width: calc((100vw - 1012px - 17px) / 2);
+  background-color: #181818f0;
+  border: 2px solid #282828;
+  z-index: 1;
+  box-sizing: border-box;
+  top: 0;
+  left: 0;
+  position: fixed;
+  overflow-x: hidden;
+  padding: 0;
+  display: none;
+}
+
+.side-notes.hide-notes {
+  width: auto;
+}
+
+.side-notes.hide-notes .side-settings {
+  gap: 0;
+}
+
+.side-notes:has(*.side-challenge:not(.hidden)) {
+  display: block;
+}
+
+.side-notes::-webkit-scrollbar {
+  width: 10px;
+}
+
+.side-notes::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.side-notes::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+.side-notes::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.side-notes.right {
+  right: 0;
+  left: auto;
+  border-bottom-left-radius: 6px;
+}
+
+.side-notes:not(.right) {
+  border-bottom-right-radius: 6px;
+}
+
+.side-nav {
+  display: flex;
+  justify-content: space-between;
+  background-color: #282828;
+  padding: 12px;
+  align-items: center;
+}
+
+.right .side-nav {
+  flex-direction: row-reverse;
+}
+
+.side-header {
+  font-size: 16px;
+  text-align: center;
+}
+
+.side-header:hover {
+  filter: brightness(0.8);
+  cursor: pointer;
+}
+
+.side-settings {
+  display: flex;
+  gap: 8px;
+}
+
+.right .side-settings {
+  flex-direction: row-reverse;
+}
+
+.side-challenges {
+  padding: 0 12px;
+}
+
+.side-challenges:has(> :not(.hidden)) {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.hide-notes .side-challenges,
+.hide-completed .side-challenges {
+  display: none;
+}
+
+.hide-completed .side-challenges:has(> .incomplete:not(.hidden)) {
+  display: list-item;
+}
+
+.side-challenge {
+  padding-top: 6px;
+}
+
+.side-challenge-header {
+  font-size: 12px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+}
+
+.side-challenge-header:hover {
+  filter: brightness(0.8);
+}
+
+.goto-container {
+  display: flex;
+  height: 100%;
+  margin-left: 10px;
+  align-items: center;
+  visibility: hidden;
+}
+
+.icon-goto {
+  width: 12px;
+  height: 12px;
+}
+
+.side-challenge-header:hover .goto-container {
+  visibility: visible;
+}
+
+.side-note {
+  font-size: 11px;
+  padding: 4px 0 8px 0;
+  white-space: pre-wrap;
+}
+
+.settings-icon.icon-minimize {
+  width: 18px;
+  height: 18px;
+}
+
+.note-completion {
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.note-completion-check.incomplete {
+  visibility: hidden;
+}
+
+/* hide toggle button */
+
+.button-settings {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+  outline: none;
+  padding: 0;
+}
+
+.button-settings:hover {
+  filter: brightness(0.8);
+}
+
+.settings-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  align-items: center;
+}
+
+.icon-show-notes {
+  width: 20px;
+  width: 20px;
+}
+
+.icon-show,
+.icon-show-notes,
+.hide-completed .icon-hide,
+.hide-notes .icon-minimize,
+.hide-notes .arrow-left,
+.hide-notes .arrow-right,
+.arrow-left,
+.side-notes.right .arrow-right,
+.hide-notes .side-header,
+.hide-completed .side-challenge.complete {
+  display: none;
+}
+
+.icon-hide,
+.hide-completed .icon-show,
+.hide-notes .icon-show-notes,
+.side-notes.right:not(.hide-notes) .arrow-left {
+  display: flex;
+}
+
+.hidden,
+.search-hidden,
+.tag-hidden,
+.hide-completed .achievement:not(.incomplete) {
+  display: none;
+}
+
+/* challenge box */
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement {
+  width: 100%;
+  background-size: 100% 40px;
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  height: 40px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  h2 {
+  padding-left: 90px;
+  justify-self: end;
+  line-height: 40px;
+}
+
+.achievement-header h2:first-child {
+  display: flex;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  img.completion {
+  position: static;
+  width: 32px;
+  height: 32px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  h2.completion-detail {
+  line-height: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding-right: 26px;
+}
+/* challenge tag input */
+.input-tag {
+  background-color: transparent;
+  border: none;
+  color: #989898;
+  margin: 0 10px;
+  align-self: center;
+  flex-grow: 1;
+  border-radius: 4px;
+  padding: 4px;
+}
+
+.input-tag:focus {
+  outline: 1px solid #989898;
+}
+
+.input-tag:hover {
+  outline: 1px solid #989898;
+  cursor: pointer;
+}
+
+.input-tag::placeholder {
+  color: #beb69888;
+}
+
+/* unhide challenge details */
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail {
+  display: block;
+  background-size: cover;
+  margin-top: 0;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail-inner {
+  padding-left: 90px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 26px;
+}
+
+.btn-detail {
+  display: none;
+}
+
+.completion {
+  margin-right: 6px;
+}
+
+.items {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 16px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  ul.split {
+  width: 100%;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  ul:not(.split) {
+  grid-column: 1 / span 2;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  span.text {
+  display: block;
+  padding-bottom: 8px;
+  font-size: 14px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  ul
+  li {
+  font-size: 14px;
+}
+
+.note-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+  background-color: transparent;
+  resize: none;
+  border: none;
+  color: #989898;
+  padding: 4px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.note-textarea:focus {
+  outline: 1px solid #333;
+}
+
+.note-textarea:hover {
+  outline: 1px solid #333;
+  cursor: pointer;
+}
+
+.note-textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.note-textarea::placeholder {
+  color: #beb69888;
+}
+
+.inner-block {
+  display: block;
+}
   `);
 
   const svgIconEye =
@@ -922,7 +936,7 @@
       `<div class='side-notes'>
         <div class="side-nav">
           <div class="settings-option"><button class="button-settings toggle-view"><div class="settings-icon icon-minimize" title="hide side-notes">${svgIconMinimize}</div><div class="settings-icon icon-show-notes" title="show side-notes">${svgIconNotePen}</div></button></div>
-          <h2 class="side-header">${state.league} league notes</h2>
+          <h2 class="side-header" title="scroll to the top">${state.league} league notes</h2>
           <div class="settings-option"><button class="button-settings toggle-side"><div class="settings-icon arrow-right" title="show on the right">${svgIconArrowR}</div><div class="settings-icon arrow-left" title="show on the left">${svgIconArrowL}</div></button></div>
         </div>
         <ul class='side-challenges'></ul>
@@ -956,6 +970,12 @@
     document
       .querySelector('.side-challenges')
       .addEventListener('click', event => clickSideChallenges(event));
+    document.querySelector('.side-header').addEventListener('click', event => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth',
+      });
+    });
   };
 
   const testAllValues = (testValues, str) => {
