@@ -931,9 +931,12 @@
     const challengeSideList = document.querySelector('.side-challenges');
     for (let [id, challObj] of state.challObjMap.entries()) {
       const challEl = state.challElMap.get(id);
-      const completionProgress =
-        challEl.querySelector('.completion-detail').textContent;
       const isComplete = !challEl.classList.contains('incomplete');
+      const completionProgress = challEl.querySelector('.completion-detail')
+        ? challEl.querySelector('.completion-detail').textContent
+        : isComplete
+        ? '1/1'
+        : '0/1';
       const { note, name } = challObj;
       challengeSideList.insertAdjacentHTML(
         'beforeend',
