@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.001
+// @version      000.005.002
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -16,462 +16,494 @@
   'use strict';
   GM_addStyle(`
   /* adjusting layout */
-.profile {
-  display: flex;
-  flex-direction: column;
-}
-
-.profile .profile-top {
-  height: 30px;
-}
-
-.profile .title-bar {
-  display: block;
-  align-self: center;
-  margin: 0;
-  flex-grow: 1;
-  text-align: right;
-}
-
-.profile .title-bar::first-letter {
-  text-transform: uppercase;
-}
-
-.challenge-list.poeForm form,
-.challenge-list.poeForm form select {
-  height: 100%;
-  max-width: 160px;
-}
-
-.profile .profile-container,
-.profile .profile-container .container-top {
-  width: 100%;
-  box-sizing: border-box;
-  padding-right: 2px;
-}
-
-.profile .profile-container .achievement-container .achievement-list {
-  width: 100%;
-  margin-top: 6px;
-  box-sizing: border-box;
-}
-
-.profile .profile-container .container-top {
-  background-size: cover;
-}
-
-.profile .profile-details,
-.profile .progress-bar-container.large,
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  .detail
-  .challenge-progress-bar-container {
-  display: none;
-}
-
-.stickyOffsetMargin {
-  padding-top: 39px;
-}
-
-.info.sticky {
-  position: fixed;
-  top: 0;
-  z-index: 1;
-  background-color: #181818f0;
-  box-sizing: border-box;
-  width: 922px;
-  padding: 4px 9px;
-  transform: translateX(-17px);
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-  border: 2px solid #282828;
-  margin-left: 1px;
-}
-
-/* adding settings */
-.settings {
-  display: flex;
-  padding: 5px 0;
-  gap: 2%;
-  align-items: stretch;
-}
-
-.sticky .settings {
-  padding: 5px 5px;
-}
-
-.input-search,
-.tag-select {
-  background-color: rgba(42, 42, 42, 0.9);
-  border: 3px solid #1d1d1c;
-  border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
-    3 3 3 3 repeat;
-  color: #beb698;
-  box-sizing: border-box;
-  padding: 3px;
-  font-size: 0.8rem;
-  max-width: 160px;
-  height: 100%;
-}
-
-.tag-select {
-  width: 160px;
-}
-
-.input-search::placeholder,
-.tag-select::placeholder {
-  color: #beb69888;
-  font-size: 0.8rem;
-  padding-left: 0;
-}
-
-.input-search:focus,
-.tag-select:focus {
-  outline: none;
-  border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
-    3 3 3 3 repeat;
-}
-
-.tag-select,
-.league-select {
-  cursor: pointer;
-}
-
-option.tag-custom {
-  color: rgb(0, 182, 255);
-}
-
-.side-notes {
-  /* 17px is a scrollbar width */
-  max-height: 100vh;
-  width: calc((100vw - 1012px - 17px) / 2);
-  background-color: #181818f0;
-  border: 2px solid #282828;
-  z-index: 1;
-  box-sizing: border-box;
-  top: 0;
-  left: 0;
-  position: fixed;
-  overflow-x: hidden;
-  padding: 0;
-  display: none;
-}
-
-.side-notes:has(*.side-challenge:not(.hidden)) {
-  display: block;
-}
-
-.side-notes::-webkit-scrollbar {
-  width: 10px;
-}
-
-.side-notes::-webkit-scrollbar-track {
-  background: #222;
-}
-
-.side-notes::-webkit-scrollbar-thumb {
-  background: #444;
-}
-
-.side-notes::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-.side-notes.right {
-  right: 0;
-  left: auto;
-}
-
-.side-nav {
-  display: flex;
-  justify-content: space-between;
-  background-color: #282828;
-  padding: 12px;
-}
-
-.side-header {
-  font-size: 16px;
-}
-
-.side-settings {
-  display: flex;
-  gap: 8px;
-}
-
-.side-challenges {
-  padding: 0 12px;
-}
-
-.side-challenges:has(> :not(.hidden)) {
-  padding-top: 12px;
-  padding-bottom: 12px;
-}
-
-.hide-notes .side-challenges {
-  display: none;
-}
-
-.side-challenge {
-  padding-top: 6px;
-}
-
-.side-challenge-header {
-  font-size: 12px;
-  display: flex;
-  cursor: pointer;
-  align-items: center;
-}
-
-.side-challenge-header:hover {
-  filter: brightness(0.8);
-}
-
-.goto-container {
-  display: flex;
-  height: 100%;
-  margin-left: 8px;
-  align-items: center;
-  display: none;
-}
-
-.icon-goto {
-  width: 12px;
-  height: 12px;
-}
-
-.side-challenge-header:hover .goto-container {
-  display: block;
-}
-
-/* .side-challenge-header:hover .button-goto {
-  display: block;
-} */
-
-.side-note {
-  font-size: 11px;
-  padding: 4px 0 8px 0;
-}
-
-/* hide toggle button */
-
-.button-settings {
-  display: flex;
-  height: 100%;
-  align-items: center;
-  background: transparent;
-  border: none;
-  box-sizing: border-box;
-  outline: none;
-  padding: 0;
-}
-
-.button-settings:hover {
-  filter: brightness(0.8);
-}
-
-.settings-icon {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-}
-
-.icon-show,
-.hide-completed .icon-hide,
-.hide-notes .icon-hide,
-.arrow-left,
-.side-notes.right .arrow-right {
-  display: none;
-}
-
-.icon-hide,
-.hide-completed .icon-show,
-.hide-notes .icon-show,
-.side-notes.right .arrow-left {
-  display: block;
-}
-
-.hidden,
-.search-hidden,
-.tag-hidden,
-.hide-completed .achievement:not(.incomplete) {
-  display: none;
-}
-
-/* challenge box */
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement {
-  width: 100%;
-  background-size: 100% 40px;
-}
-
-.achievement-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 11px;
-  height: 40px;
-}
-
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  h2 {
-  padding-left: 90px;
-  justify-self: end;
-  line-height: 40px;
-}
-
-.achievement-header h2:first-child {
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
-}
-
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  img.completion {
-  position: static;
-  width: 32px;
-  height: 32px;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  h2.completion-detail {
-  line-height: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  padding-right: 26px;
-}
-/* challenge tag input */
-.input-tag {
-  background-color: transparent;
-  border: none;
-  color: #989898;
-  margin: 0 10px;
-  align-self: center;
-  flex-grow: 1;
-  border-radius: 4px;
-  padding: 4px;
-}
-
-.input-tag:focus {
-  outline: 1px solid #989898;
-}
-
-.input-tag::placeholder {
-  color: #beb69888;
-}
-
-/* unhide challenge details */
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  .detail {
-  display: block;
-  background-size: cover;
-  margin-top: 0;
-}
-
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  .detail-inner {
-  padding-left: 90px;
-  padding-top: 20px;
-  padding-bottom: 20px;
-}
-
-.btn-detail {
-  display: none;
-}
-
-.completion {
-  margin-right: 6px;
-}
-
-.items {
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  column-gap: 16px;
-}
-
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  .detail
-  ul.split {
-  width: 100%;
-}
-
-.profile
-  .profile-container
-  .achievement-container
-  .achievement-list
-  .achievement
-  .detail
-  ul:not(.split) {
-  grid-column: 1 / span 2;
-}
-
-.note-textarea {
-  width: 100%;
-  box-sizing: border-box;
-  height: 100%;
-  background-color: transparent;
-  resize: none;
-  border: none;
-  color: #989898;
-  padding: 4px;
-  font-size: 0.8rem;
-  border-radius: 4px;
-}
-
-.note-textarea:focus {
-  outline: 1px solid #333;
-}
-
-.note-textarea::-webkit-scrollbar {
-  display: none;
-}
-
-.note-textarea::placeholder {
-  color: #beb69888;
-}
-
-.inner-block {
-  display: block;
-}
+  .profile {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .profile .profile-top {
+    height: 30px;
+  }
+  
+  .profile .title-bar {
+    display: block;
+    align-self: center;
+    margin: 0;
+    flex-grow: 1;
+    text-align: right;
+  }
+  
+  .profile .title-bar::first-letter {
+    text-transform: uppercase;
+  }
+  
+  .challenge-list.poeForm form,
+  .challenge-list.poeForm form select {
+    height: 100%;
+    max-width: 160px;
+  }
+  
+  .profile .profile-container,
+  .profile .profile-container .container-top {
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 2px;
+  }
+  
+  .profile .profile-container .achievement-container .achievement-list {
+    width: 100%;
+    margin-top: 6px;
+    box-sizing: border-box;
+  }
+  
+  .profile .profile-container .container-top {
+    background-size: cover;
+  }
+  
+  .profile .profile-details,
+  .profile .progress-bar-container.large,
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    .detail
+    .challenge-progress-bar-container {
+    display: none;
+  }
+  
+  .stickyOffsetMargin {
+    padding-top: 39px;
+  }
+  
+  .info.sticky {
+    position: fixed;
+    top: 0;
+    z-index: 1;
+    background-color: #181818f0;
+    box-sizing: border-box;
+    width: 922px;
+    padding: 4px 9px;
+    transform: translateX(-17px);
+    border-bottom-left-radius: 6px;
+    border-bottom-right-radius: 6px;
+    border: 2px solid #282828;
+    margin-left: 1px;
+  }
+  
+  /* adding settings */
+  .settings {
+    display: flex;
+    padding: 5px 0;
+    gap: 2%;
+    align-items: stretch;
+  }
+  
+  .sticky .settings {
+    padding: 5px 5px;
+  }
+  
+  .input-search,
+  .tag-select {
+    background-color: rgba(42, 42, 42, 0.9);
+    border: 3px solid #1d1d1c;
+    border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
+      3 3 3 3 repeat;
+    color: #beb698;
+    box-sizing: border-box;
+    padding: 3px;
+    font-size: 0.8rem;
+    max-width: 160px;
+    height: 100%;
+  }
+  
+  .tag-select {
+    width: 160px;
+  }
+  
+  .input-search::placeholder,
+  .tag-select::placeholder {
+    color: #beb69888;
+    font-size: 0.8rem;
+    padding-left: 0;
+  }
+  
+  .input-search:focus,
+  .tag-select:focus {
+    outline: none;
+    border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
+      3 3 3 3 repeat;
+  }
+  
+  .tag-select,
+  .league-select {
+    cursor: pointer;
+  }
+  
+  option.tag-custom {
+    color: rgb(0, 182, 255);
+  }
+  
+  .side-notes {
+    /* 17px is a scrollbar width */
+    max-height: 100vh;
+    width: calc((100vw - 1012px - 17px) / 2);
+    background-color: #181818f0;
+    border: 2px solid #282828;
+    z-index: 1;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    position: fixed;
+    overflow-x: hidden;
+    padding: 0;
+    display: none;
+  }
+  
+  .side-notes.hide-notes {
+    width: auto;
+  }
+  
+  .side-notes.hide-notes .side-settings {
+    gap: 0;
+  }
+  
+  .side-notes:has(*.side-challenge:not(.hidden)) {
+    display: block;
+  }
+  
+  .side-notes::-webkit-scrollbar {
+    width: 10px;
+  }
+  
+  .side-notes::-webkit-scrollbar-track {
+    background: #222;
+  }
+  
+  .side-notes::-webkit-scrollbar-thumb {
+    background: #444;
+  }
+  
+  .side-notes::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
+  
+  .side-notes.right {
+    right: 0;
+    left: auto;
+    border-bottom-left-radius: 6px;
+  }
+  
+  .side-notes:not(.right) {
+    border-bottom-right-radius: 6px;
+  }
+  
+  .side-nav {
+    display: flex;
+    justify-content: space-between;
+    background-color: #282828;
+    padding: 12px;
+    align-items: center;
+  }
+  
+  .right .side-nav {
+    flex-direction: row-reverse;
+  }
+  
+  .side-header {
+    font-size: 16px;
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  .side-settings {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .right .side-settings {
+    flex-direction: row-reverse;
+  }
+  
+  .side-challenges {
+    padding: 0 12px;
+  }
+  
+  .side-challenges:has(> :not(.hidden)) {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+  
+  .hide-notes .side-challenges {
+    display: none;
+  }
+  
+  .side-challenge {
+    padding-top: 6px;
+  }
+  
+  .side-challenge-header {
+    font-size: 12px;
+    display: flex;
+    cursor: pointer;
+    align-items: center;
+  }
+  
+  .side-challenge-header:hover {
+    filter: brightness(0.8);
+  }
+  
+  .goto-container {
+    display: flex;
+    height: 100%;
+    margin-left: 8px;
+    align-items: center;
+    display: none;
+  }
+  
+  .icon-goto {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .side-challenge-header:hover .goto-container {
+    display: block;
+  }
+  
+  .side-note {
+    font-size: 11px;
+    padding: 4px 0 8px 0;
+    white-space: pre-wrap;
+  }
+  
+  .settings-icon.icon-minimize {
+    width: 18px;
+    height: 18px;
+  }
+  
+  /* hide toggle button */
+  
+  .button-settings {
+    display: flex;
+    height: 100%;
+    align-items: center;
+    background: transparent;
+    border: none;
+    box-sizing: border-box;
+    outline: none;
+    padding: 0;
+  }
+  
+  .button-settings:hover {
+    filter: brightness(0.8);
+  }
+  
+  .settings-icon {
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    align-items: center;
+  }
+  
+  .icon-show,
+  .icon-show-notes,
+  .hide-completed .icon-hide,
+  .hide-notes .icon-minimize,
+  .hide-notes .arrow-left,
+  .hide-notes .arrow-right,
+  .arrow-left,
+  .side-notes.right .arrow-right,
+  .hide-notes .side-header {
+    display: none;
+  }
+  
+  .icon-hide,
+  .hide-completed .icon-show,
+  .hide-notes .icon-show-notes,
+  .side-notes.right:not(.hide-notes) .arrow-left {
+    display: flex;
+  }
+  
+  .hidden,
+  .search-hidden,
+  .tag-hidden,
+  .hide-completed .achievement:not(.incomplete) {
+    display: none;
+  }
+  
+  /* challenge box */
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement {
+    width: 100%;
+    background-size: 100% 40px;
+  }
+  
+  .achievement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    height: 40px;
+  }
+  
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    h2 {
+    padding-left: 90px;
+    justify-self: end;
+    line-height: 40px;
+  }
+  
+  .achievement-header h2:first-child {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+  }
+  
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    img.completion {
+    position: static;
+    width: 32px;
+    height: 32px;
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+  
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    h2.completion-detail {
+    line-height: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    padding-right: 26px;
+  }
+  /* challenge tag input */
+  .input-tag {
+    background-color: transparent;
+    border: none;
+    color: #989898;
+    margin: 0 10px;
+    align-self: center;
+    flex-grow: 1;
+    border-radius: 4px;
+    padding: 4px;
+  }
+  
+  .input-tag:focus {
+    outline: 1px solid #989898;
+  }
+  
+  .input-tag::placeholder {
+    color: #beb69888;
+  }
+  
+  /* unhide challenge details */
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    .detail {
+    display: block;
+    background-size: cover;
+    margin-top: 0;
+  }
+  
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    .detail-inner {
+    padding-left: 90px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+  
+  .btn-detail {
+    display: none;
+  }
+  
+  .completion {
+    margin-right: 6px;
+  }
+  
+  .items {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    column-gap: 16px;
+  }
+  
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    .detail
+    ul.split {
+    width: 100%;
+  }
+  
+  .profile
+    .profile-container
+    .achievement-container
+    .achievement-list
+    .achievement
+    .detail
+    ul:not(.split) {
+    grid-column: 1 / span 2;
+  }
+  
+  .note-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    height: 100%;
+    background-color: transparent;
+    resize: none;
+    border: none;
+    color: #989898;
+    padding: 4px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+  }
+  
+  .note-textarea:focus {
+    outline: 1px solid #333;
+  }
+  
+  .note-textarea::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .note-textarea::placeholder {
+    color: #beb69888;
+  }
+  
+  .inner-block {
+    display: block;
+  }
+  
   `);
 
   const svgIconEye =
-    '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><circle cx="256" cy="256" r="64" fill="#beb698"/><path fill="#beb698" d="M490.84 238.6c-26.46-40.92-60.79-75.68-99.27-100.53C349 110.55 302 96 255.66 96c-42.52 0-84.33 12.15-124.27 36.11-40.73 24.43-77.63 60.12-109.68 106.07a31.92 31.92 0 00-.64 35.54c26.41 41.33 60.4 76.14 98.28 100.65C162 402 207.9 416 255.66 416c46.71 0 93.81-14.43 136.2-41.72 38.46-24.77 72.72-59.66 99.08-100.92a32.2 32.2 0 00-.1-34.76zM256 352a96 96 0 1196-96 96.11 96.11 0 01-96 96z"/></svg>';
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M288 32c-80.8 0-145.5 36.8-192.6 80.6C48.6 156 17.3 208 2.5 243.7c-3.3 7.9-3.3 16.7 0 24.6C17.3 304 48.6 356 95.4 399.4C142.5 443.2 207.2 480 288 480s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C433.5 68.8 368.8 32 288 32zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64c-7.1 0-13.9-1.2-20.3-3.3c-5.5-1.8-11.9 1.6-11.7 7.4c.3 6.9 1.3 13.8 3.2 20.7c13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3z" fill="#beb698"/></svg>';
 
   const svgIconEyeOff =
-    '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path d="M432 448a15.92 15.92 0 01-11.31-4.69l-352-352a16 16 0 0122.62-22.62l352 352A16 16 0 01432 448zM248 315.85l-51.79-51.79a2 2 0 00-3.39 1.69 64.11 64.11 0 0053.49 53.49 2 2 0 001.69-3.39zM264 196.15L315.87 248a2 2 0 003.4-1.69 64.13 64.13 0 00-53.55-53.55 2 2 0 00-1.72 3.39z" fill="#beb698"/><path d="M491 273.36a32.2 32.2 0 00-.1-34.76c-26.46-40.92-60.79-75.68-99.27-100.53C349 110.55 302 96 255.68 96a226.54 226.54 0 00-71.82 11.79 4 4 0 00-1.56 6.63l47.24 47.24a4 4 0 003.82 1.05 96 96 0 01116 116 4 4 0 001.05 3.81l67.95 68a4 4 0 005.4.24 343.81 343.81 0 0067.24-77.4zM256 352a96 96 0 01-93.3-118.63 4 4 0 00-1.05-3.81l-66.84-66.87a4 4 0 00-5.41-.23c-24.39 20.81-47 46.13-67.67 75.72a31.92 31.92 0 00-.64 35.54c26.41 41.33 60.39 76.14 98.28 100.65C162.06 402 207.92 416 255.68 416a238.22 238.22 0 0072.64-11.55 4 4 0 001.61-6.64l-47.47-47.46a4 4 0 00-3.81-1.05A96 96 0 01256 352z" fill="#beb698"/></svg>';
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M38.8 5.1C28.4-3.1 13.3-1.2 5.1 9.2S-1.2 34.7 9.2 42.9l592 464c10.4 8.2 25.5 6.3 33.7-4.1s6.3-25.5-4.1-33.7L525.6 386.7c39.6-40.6 66.4-86.1 79.9-118.4c3.3-7.9 3.3-16.7 0-24.6c-14.9-35.7-46.2-87.7-93-131.1C465.5 68.8 400.8 32 320 32c-68.2 0-125 26.3-169.3 60.8L38.8 5.1zM223.1 149.5C248.6 126.2 282.7 112 320 112c79.5 0 144 64.5 144 144c0 24.9-6.3 48.3-17.4 68.7L408 294.5c8.4-19.3 10.6-41.4 4.8-63.3c-11.1-41.5-47.8-69.4-88.6-71.1c-5.8-.2-9.2 6.1-7.4 11.7c2.1 6.4 3.3 13.2 3.3 20.3c0 10.2-2.4 19.8-6.6 28.3l-90.3-70.8zM373 389.9c-16.4 6.5-34.3 10.1-53 10.1c-79.5 0-144-64.5-144-144c0-6.9 .5-13.6 1.4-20.2L83.1 161.5C60.3 191.2 44 220.8 34.5 243.7c-3.3 7.9-3.3 16.7 0 24.6c14.9 35.7 46.2 87.7 93 131.1C174.5 443.2 239.2 480 320 480c47.8 0 89.9-12.9 126.2-32.5L373 389.9z" fill="#beb698"/></svg>';
 
   const svgIconTrash =
     '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path d="M296 64h-80a7.91 7.91 0 00-8 8v24h96V72a7.91 7.91 0 00-8-8z" fill="none"/><path d="M432 96h-96V72a40 40 0 00-40-40h-80a40 40 0 00-40 40v24H80a16 16 0 000 32h17l19 304.92c1.42 26.85 22 47.08 48 47.08h184c26.13 0 46.3-19.78 48-47l19-305h17a16 16 0 000-32zM192.57 416H192a16 16 0 01-16-15.43l-8-224a16 16 0 1132-1.14l8 224A16 16 0 01192.57 416zM272 400a16 16 0 01-32 0V176a16 16 0 0132 0zm32-304h-96V72a7.91 7.91 0 018-8h80a7.91 7.91 0 018 8zm32 304.57A16 16 0 01320 416h-.58A16 16 0 01304 399.43l8-224a16 16 0 1132 1.14z" fill="#beb698"/></svg>';
@@ -484,6 +516,12 @@ option.tag-custom {
 
   const svgIconArrowGoTo =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#beb698" d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></svg>';
+
+  const svgIconNotePen =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M0 64C0 28.7 28.7 0 64 0H224V128c0 17.7 14.3 32 32 32H384V299.6l-94.7 94.7c-8.2 8.2-14 18.5-16.8 29.7l-15 60.1c-2.3 9.4-1.8 19 1.4 27.8H64c-35.3 0-64-28.7-64-64V64zm384 64H256V0L384 128zM549.8 235.7l14.4 14.4c15.6 15.6 15.6 40.9 0 56.6l-29.4 29.4-71-71 29.4-29.4c15.6-15.6 40.9-15.6 56.6 0zM311.9 417L441.1 287.8l71 71L382.9 487.9c-4.1 4.1-9.2 7-14.9 8.4l-60.1 15c-5.5 1.4-11.2-.2-15.2-4.2s-5.6-9.7-4.2-15.2l15-60.1c1.4-5.6 4.3-10.8 8.4-14.9z" fill="#beb698"/></svg>';
+
+  const svgIconMinimize =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M64 80c-8.8 0-16 7.2-16 16V416c0 8.8 7.2 16 16 16H384c8.8 0 16-7.2 16-16V96c0-8.8-7.2-16-16-16H64zM0 96C0 60.7 28.7 32 64 32H384c35.3 0 64 28.7 64 64V416c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V96zM152 232H296c13.3 0 24 10.7 24 24s-10.7 24-24 24H152c-13.3 0-24-10.7-24-24s10.7-24 24-24z" fill="#beb698"/></svg>';
 
   // decodeURIComponent is necessary for leagues separated by /
   const state = {
@@ -700,7 +738,7 @@ option.tag-custom {
   const insertNoteTextareaEl = (parentEl, id) => {
     parentEl.insertAdjacentHTML(
       'beforeend',
-      `<div class="note-container"><textarea name="textarea" class="note-textarea" placeholder="Write your note here" data-id="${id}"></textarea>`
+      `<div class="note-container"><textarea name="textarea" class="note-textarea" placeholder="Write your note here" data-id="${id}" wrap="hard"></textarea>`
     );
     return parentEl.querySelector('.note-textarea');
   };
@@ -836,10 +874,11 @@ option.tag-custom {
   const createSideNotes = () => {
     document.querySelector('body').insertAdjacentHTML(
       'beforeend',
-      `<div class='side-notes left'>
+      `<div class='side-notes'>
         <div class="side-nav">
+          <button class="button-settings toggle-view"><div class="settings-icon icon-minimize" title="hide side-notes">${svgIconMinimize}</div><div class="settings-icon icon-show-notes" title="show side-notes">${svgIconNotePen}</div></button>
           <h2 class="side-header">${state.league} league notes</h2>
-          <div class="side-settings"><button class="button-settings toggle-view"><div class="settings-icon icon-hide" title="hide side-notes">${svgIconEye}</div><div class="settings-icon icon-show" title="show side-notes">${svgIconEyeOff}</div></button><button class="button-settings toggle-side"><div class="settings-icon arrow-right" title="show on the right">${svgIconArrowR}</div><div class="settings-icon arrow-left" title="show on the left">${svgIconArrowL}</div></button></div>
+          <button class="button-settings toggle-side"><div class="settings-icon arrow-right" title="show on the right">${svgIconArrowR}</div><div class="settings-icon arrow-left" title="show on the left">${svgIconArrowL}</div></button>
         </div>
         <ul class='side-challenges'></ul>
       </div>`
