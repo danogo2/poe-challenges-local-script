@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.0011
+// @version      000.005.0012
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -362,10 +362,13 @@ option.tag-custom {
   .achievement-container
   .achievement-list
   .achievement
-  h2 {
-  padding-left: 90px;
-  justify-self: end;
-  line-height: 40px;
+  h2.challenge-header-text {
+  display: flex;
+  line-height: 100%;
+  align-items: center;
+  text-wrap: nowrap;
+  padding: 10px 0 10px 80px;
+  font-size: 17px;
 }
 
 .profile
@@ -420,6 +423,8 @@ option.tag-custom {
 }
 
 .display-tag {
+  overflow-x: scroll;
+  text-wrap: nowrap;
   display: flex;
   align-items: center;
 }
@@ -454,7 +459,7 @@ option.tag-custom {
   .achievement-list
   .achievement
   .detail-inner {
-  padding-left: 90px;
+  padding-left: 80px;
   padding-top: 20px;
   padding-bottom: 20px;
   padding-right: 26px;
