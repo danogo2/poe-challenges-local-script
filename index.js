@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.008
+// @version      000.005.009
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -373,6 +373,7 @@ option.tag-custom {
   align-items: center;
   font-size: 11px;
   height: 40px;
+  gap: 10px;
 }
 
 .profile
@@ -384,12 +385,6 @@ option.tag-custom {
   padding-left: 90px;
   justify-self: end;
   line-height: 40px;
-}
-
-.achievement-header h2:first-child {
-  display: flex;
-  align-items: center;
-  flex-grow: 1;
 }
 
 .profile
@@ -422,7 +417,6 @@ option.tag-custom {
   background-color: transparent;
   border: none;
   color: #989898;
-  margin: 0 10px;
   align-self: center;
   flex-grow: 1;
   border-radius: 4px;
@@ -546,7 +540,19 @@ option.tag-custom {
 }
 
 .note-textarea::-webkit-scrollbar {
-  display: none;
+  width: 4px;
+}
+
+.note-textarea::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.note-textarea::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+.note-textarea::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
 .note-textarea::placeholder {
@@ -1114,6 +1120,7 @@ option.tag-custom {
   const changeChallStyle = (id, challEl) => {
     // create header
     const headerEl = challEl.querySelector('h2');
+    headerEl.classList.add('challenge-header-text');
     headerEl.textContent = `${id}. ${headerEl.textContent}`;
     const completionEl = challEl.querySelector('.completion-detail');
     const completionImgEl = challEl.querySelector('img.completion');
@@ -1121,6 +1128,8 @@ option.tag-custom {
     challEl.innerHTML = `<div class="achievement-header"></div>`;
     const headerContainerEl = challEl.querySelector('.achievement-header');
     headerContainerEl.insertAdjacentElement('beforeend', headerEl);
+    // add tag input
+    insertTagInputEl(headerContainerEl, id);
     if (completionEl) {
       headerContainerEl.insertAdjacentElement('beforeend', completionEl);
       completionEl.insertAdjacentElement('beforeend', completionImgEl);
@@ -1142,8 +1151,6 @@ option.tag-custom {
     }
     // add detail element
     challEl.insertAdjacentElement('beforeend', detailEl);
-    // add tag input
-    insertTagInputEl(headerEl, id);
     // add note input
     const taskList = challEl.querySelector('.items');
     if (taskList) {
