@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.0010
+// @version      000.005.0011
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -141,15 +141,15 @@
 }
 
 option.tag-custom {
-  color: rgb(0, 182, 255);
+  color: rgb(152, 182, 190);
 }
 
 .display-tag span.custom {
-  color: rgb(0, 182, 255);
+  color: rgb(152, 182, 190);
 }
 
 .display-tag span.default {
-  color: rgb(182, 182, 182);
+  color: rgb(190, 182, 152);
 }
 
 .side-notes {
@@ -1395,11 +1395,11 @@ option.tag-custom {
     const challId = Number(tagInputEl.dataset.id);
     const challObj = state.challObjMap.get(challId);
 
-    let enteredTags, formattedTags;
+    let enteredTags, curChallTagsSet, formattedTags;
     if (validatedInputValue) {
       enteredTags = validatedInputValue;
       // create Set from array to get rid of duplicates
-      const curChallTagsSet = new Set([...enteredTags]);
+      curChallTagsSet = new Set([...enteredTags]);
       // if deleted default tag, remove it from default tags until reset
       checkForDefaultRemoval(challObj, curChallTagsSet);
       enteredTags = [...curChallTagsSet];
