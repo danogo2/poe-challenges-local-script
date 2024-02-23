@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.007
+// @version      000.005.008
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -1308,10 +1308,11 @@ option.tag-custom {
   const tagInputHandler = event => {
     const tagInputEl = event.target;
     const inputValue = tagInputEl.value.trim();
+    const validatedInputValue = inputValue.match(/[^\s,]+/g);
     const challId = Number(tagInputEl.dataset.id);
     const challObj = state.challObjMap.get(challId);
-    let enteredTags = inputValue.length
-      ? inputValue.match(/[^\s,]+/g)
+    let enteredTags = validatedInputValue
+      ? validatedInputValue
       : [...getDefaultTagsFromText(challObj.searchChars)];
 
     // create Set from array to get rid of duplicates
