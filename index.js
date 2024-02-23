@@ -144,6 +144,14 @@ option.tag-custom {
   color: rgb(0, 182, 255);
 }
 
+.display-tag span.custom {
+  color: rgb(0, 182, 255);
+}
+
+.display-tag span.default {
+  color: rgb(182, 182, 182);
+}
+
 .side-notes {
   /* 17px is a scrollbar width */
   max-height: 100vh;
@@ -330,33 +338,6 @@ option.tag-custom {
   width: 20px;
 }
 
-.icon-show,
-.icon-show-notes,
-.hide-completed .icon-hide,
-.hide-notes .icon-minimize,
-.hide-notes .arrow-left,
-.hide-notes .arrow-right,
-.arrow-left,
-.side-notes.right .arrow-right,
-.hide-notes .side-header,
-.hide-completed .side-challenge.complete {
-  display: none;
-}
-
-.icon-hide,
-.hide-completed .icon-show,
-.hide-notes .icon-show-notes,
-.side-notes.right:not(.hide-notes) .arrow-left {
-  display: flex;
-}
-
-.hidden,
-.search-hidden,
-.tag-hidden,
-.hide-completed .achievement:not(.incomplete) {
-  display: none;
-}
-
 /* challenge box */
 .profile
   .profile-container
@@ -413,7 +394,8 @@ option.tag-custom {
   padding-right: 26px;
 }
 /* challenge tag input */
-.input-tag {
+.input-tag,
+.display-tag {
   background-color: transparent;
   border: none;
   color: #989898;
@@ -421,15 +403,33 @@ option.tag-custom {
   flex-grow: 1;
   border-radius: 4px;
   padding: 4px;
+  height: 70%;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .input-tag:focus {
   outline: 1px solid #989898;
 }
 
-.input-tag:hover {
+.input-tag:hover,
+.display-tag:hover {
   outline: 1px solid #989898;
   cursor: pointer;
+}
+
+.display-tag {
+  display: flex;
+  align-items: center;
+}
+
+.display-tag span {
+  line-height: 1;
+}
+
+.display-tag::-webkit-scrollbar {
+  display: none;
 }
 
 .input-tag::placeholder {
@@ -561,6 +561,35 @@ option.tag-custom {
 
 .inner-block {
   display: block;
+}
+
+/* hide elements */
+
+.icon-show,
+.icon-show-notes,
+.hide-completed .icon-hide,
+.hide-notes .icon-minimize,
+.hide-notes .arrow-left,
+.hide-notes .arrow-right,
+.arrow-left,
+.side-notes.right .arrow-right,
+.hide-notes .side-header,
+.hide-completed .side-challenge.complete {
+  display: none;
+}
+
+.icon-hide,
+.hide-completed .icon-show,
+.hide-notes .icon-show-notes,
+.side-notes.right:not(.hide-notes) .arrow-left {
+  display: flex;
+}
+
+.hidden,
+.search-hidden,
+.tag-hidden,
+.hide-completed .achievement:not(.incomplete) {
+  display: none;
 }
   `);
 
@@ -798,6 +827,14 @@ option.tag-custom {
       `<input type="text" class="input-tag" placeholder="tag1, tag2, tag3.." data-id="${id}"/>`
     );
     return parentEl.querySelector('.input-tag');
+  };
+
+  const insertTagsDisplayEl = (parentEl, id) => {
+    parentEl.insertAdjacentHTML(
+      'beforeend',
+      `<div class="display-tag" data-id="${id}"></div>`
+    );
+    return parentEl.querySelector('.display-tag');
   };
 
   const insertNoteTextareaEl = (parentEl, id) => {
@@ -1130,6 +1167,7 @@ option.tag-custom {
     headerContainerEl.insertAdjacentElement('beforeend', headerEl);
     // add tag input
     insertTagInputEl(headerContainerEl, id);
+    insertTagsDisplayEl(headerContainerEl, id);
     if (completionEl) {
       headerContainerEl.insertAdjacentElement('beforeend', completionEl);
       completionEl.insertAdjacentElement('beforeend', completionImgEl);
@@ -1160,6 +1198,38 @@ option.tag-custom {
       detailEl.querySelector('.text').classList.add('inner-block');
       insertNoteTextareaEl(detailInnerEl, id);
     }
+  };
+
+  const updateDisplayedTagsHTML = (tagDisplayEl, challObj) => {
+    removeAllChildNodes(tagDisplayEl);
+    let i = 1;
+    for (let tagObj of challObj.tags) {
+      tagDisplayEl.insertAdjacentHTML(
+        'beforeend',
+        `<span class="${tagObj.type}">${tagObj.name}${
+          i < challObj.tags.length ? ',&nbsp;' : ''
+        }</span>`
+      );
+      i++;
+    }
+  };
+
+  const toggleDisplayAndInput = (tagInputEl, tagDisplayEl, challObj) => {
+    if (challObj.tags.length) {
+      tagInputEl.classList.add('hidden');
+      tagDisplayEl.classList.remove('hidden');
+    } else {
+      tagInputEl.classList.remove('hidden');
+      tagDisplayEl.classList.add('hidden');
+    }
+  };
+
+  const clickTagDisplayHandler = event => {
+    const tagDisplayEl = event.target.closest('.display-tag');
+    tagDisplayEl.classList.add('hidden');
+    const tagInputEl = tagDisplayEl.previousSibling;
+    tagInputEl.classList.remove('hidden');
+    tagInputEl.focus();
   };
 
   const getChallengeSearchChars = challEl => {
@@ -1218,10 +1288,13 @@ option.tag-custom {
       tags: [...createTagObjectsFromArr(challDefaultTags, 'default')], // eg. tag objects {name: 'boss', type: 'default' || 'custom'}
     };
     state.challObjMap.set(id, newChallObj);
-    // add tags to chall tag input when there is no local storage fetch
+    // add default tags to chall tag display when there is no local storage fetch
     const tagInputEl = challEl.querySelector('.input-tag');
+    const tagDisplayEl = challEl.querySelector('.display-tag');
     const tagsString = newChallObj.tags.map(tagObj => tagObj.name).join(', ');
     tagInputEl.value = tagsString;
+    updateDisplayedTagsHTML(tagDisplayEl, newChallObj);
+    toggleDisplayAndInput(tagInputEl, tagDisplayEl, newChallObj);
   };
 
   const updateChallTags = challObj => {
@@ -1267,8 +1340,11 @@ option.tag-custom {
     }
     // TODO: display tags differently
     const tagInputEl = challEl.querySelector('.input-tag');
+    const tagDisplayEl = challEl.querySelector('.display-tag');
     const tagsString = challObj.tags.map(tagObj => tagObj.name).join(', ');
     tagInputEl.value = tagsString;
+    updateDisplayedTagsHTML(challEl.querySelector('.display-tag'), challObj);
+    toggleDisplayAndInput(tagInputEl, tagDisplayEl, challObj);
   };
 
   const removeBrs = () => {
@@ -1318,17 +1394,21 @@ option.tag-custom {
     const validatedInputValue = inputValue.match(/[^\s,]+/g);
     const challId = Number(tagInputEl.dataset.id);
     const challObj = state.challObjMap.get(challId);
-    let enteredTags = validatedInputValue
-      ? validatedInputValue
-      : [...getDefaultTagsFromText(challObj.searchChars)];
 
-    // create Set from array to get rid of duplicates
-    const curChallTagsSet = new Set([...enteredTags]);
-    // if deleted default tag, remove it from default tags until reset
-    checkForDefaultRemoval(challObj, curChallTagsSet);
-    enteredTags = [...curChallTagsSet];
-    // tag max length: 16 characters
-    const formattedTags = enteredTags.map(tag => tag.slice(0, 16));
+    let enteredTags, formattedTags;
+    if (validatedInputValue) {
+      enteredTags = validatedInputValue;
+      // create Set from array to get rid of duplicates
+      const curChallTagsSet = new Set([...enteredTags]);
+      // if deleted default tag, remove it from default tags until reset
+      checkForDefaultRemoval(challObj, curChallTagsSet);
+      enteredTags = [...curChallTagsSet];
+      // tag max length: 16 characters
+      formattedTags = enteredTags.map(tag => tag.slice(0, 16));
+    } else {
+      challObj.defaultTags = [...getDefaultTagsFromText(challObj.searchChars)];
+      formattedTags = challObj.defaultTags;
+    }
 
     challObj.tags = [];
     const challDefaultTagsSet = new Set(challObj.defaultTags);
@@ -1342,6 +1422,8 @@ option.tag-custom {
     }
 
     updateTagInputHTML(challObj, tagInputEl);
+    updateDisplayedTagsHTML(tagInputEl.nextSibling, challObj);
+    toggleDisplayAndInput(tagInputEl, tagInputEl.nextSibling, challObj);
     updateTagsDropdownHTML();
     // hide challenge after deleting currently selected tag from its tag input
     if (
@@ -1374,6 +1456,28 @@ option.tag-custom {
       }
       if (target.classList.contains('note-textarea')) {
         noteChangeHandler(event);
+      }
+    });
+
+    challsContainerEl.addEventListener('focusout', event => {
+      // event delegation
+      const target = event.target;
+      if (target.classList.contains('input-tag')) {
+        if (!target.value) return;
+        // hide input and show display on focusout only if there is a value to display
+        target.classList.add('hidden');
+        target.nextSibling.classList.remove('hidden');
+      }
+    });
+
+    challsContainerEl.addEventListener('click', event => {
+      // event delegation
+      const target = event.target;
+      if (
+        target.closest('div').className === 'display-tag' ||
+        target.classList.contains('display-tag')
+      ) {
+        clickTagDisplayHandler(event);
       }
     });
   };
