@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.0016
+// @version      000.006.000
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -342,6 +342,7 @@ option.tag-custom {
 }
 
 .settings-icon {
+  display: flex;
   width: 24px;
   height: 24px;
   cursor: pointer;
@@ -612,6 +613,7 @@ option.tag-custom {
 .hide-completed .achievement:not(.incomplete) {
   display: none;
 }
+
   `);
 
   const svgIconEye =
@@ -648,7 +650,8 @@ option.tag-custom {
   const state = {
     challElMap: new Map(),
     challObjMap: new Map(),
-    challsGotLoaded: false,
+    leagueStateGotLoaded: false,
+    hasPoeInLS: false,
     defaultTagsChanged: false,
     defaultTagsSet: new Set(), // currently available in a league, not all from array below
     customTagsSet: new Set(),
@@ -776,13 +779,18 @@ option.tag-custom {
   };
 
   const getStateFromLS = () => {
-    let leagueStateLS = localStorage.getItem(state.league);
-
-    if (leagueStateLS) {
-      leagueStateLS = JSON.parse(leagueStateLS);
+    let poeLS = localStorage.getItem('poe');
+    if (poeLS) {
+      state.hasPoeInLS = true;
+      const poeStateLS = JSON.parse(poeLS);
+      if (!poeStateLS[state.league]) {
+        state.leagueStateGotLoaded = false;
+        return;
+      }
+      state.leagueStateGotLoaded = true;
+      const leagueStateLS = poeStateLS[state.league];
       const { challsArrayLS, defaultTagsLS } = leagueStateLS;
       if (challsArrayLS) {
-        state.challsGotLoaded = true;
         state.challObjMap = new Map(JSON.parse(challsArrayLS));
       }
       if (defaultTagsLS) {
@@ -795,13 +803,22 @@ option.tag-custom {
   };
 
   const updateLS = () => {
-    localStorage.setItem(
-      state.league,
-      JSON.stringify({
-        challsArrayLS: JSON.stringify(Array.from(state.challObjMap)),
-        defaultTagsLS: JSON.stringify(state.defaultTags),
-      })
-    );
+    const currentLeagueState = {
+      challsArrayLS: JSON.stringify(Array.from(state.challObjMap)),
+      defaultTagsLS: JSON.stringify(state.defaultTags),
+    };
+    if (state.hasPoeInLS) {
+      const stateLS = JSON.parse(localStorage.getItem('poe'));
+      stateLS[state.league] = currentLeagueState;
+      localStorage.setItem('poe', JSON.stringify(stateLS));
+    } else {
+      localStorage.setItem(
+        'poe',
+        JSON.stringify({
+          [state.league]: currentLeagueState,
+        })
+      );
+    }
   };
 
   const getCoords = elem => {
@@ -838,6 +855,14 @@ option.tag-custom {
       `<div class="settings-option"><button class='button-settings button-clear'><div class="settings-icon icon-clear" title="clear league">${svgIconTrash}</div></button></div>`
     );
     return parentEl.querySelector('.button-clear');
+  };
+
+  const insertExportButtonEl = parentEl => {
+    parentEl.insertAdjacentHTML(
+      'beforeend',
+      `<div class="settings-option"><button class='button-settings button-export'><div class="settings-icon icon-export" title="export tags and notes">${svgIconExport}</div></button></div>`
+    );
+    return parentEl.querySelector('.button-export');
   };
 
   const insertTagSelectEl = parentEl => {
@@ -1145,7 +1170,9 @@ option.tag-custom {
       `Clear tags and notes for ${state.league} league?`
     );
     if (hasConfirmed) {
-      localStorage.removeItem(state.league);
+      const poeStateLS = JSON.parse(localStorage.getItem('poe'));
+      delete poeStateLS[state.league];
+      localStorage.setItem('poe', JSON.stringify(poeStateLS));
       location.reload();
     }
   };
@@ -1171,6 +1198,7 @@ option.tag-custom {
     settingsEl.insertAdjacentElement('beforeend', leagueSelectEl);
     const hideButtonEl = insertHideButtonEl(settingsEl);
     const clearButtonEl = insertClearButtonEl(settingsEl);
+    const exportButtonEl = insertExportButtonEl(settingsEl);
     titleEl.textContent = titleEl.textContent.replace('Challenges', '').trim();
     settingsEl.insertAdjacentElement('beforeend', titleEl);
 
@@ -1179,6 +1207,10 @@ option.tag-custom {
     addEventHandler(tagSelectEl, 'change', selectTagHandler);
     addEventHandler(hideButtonEl, 'click', clickHideButtonHandler);
     addEventHandler(clearButtonEl, 'click', clickClearButtonHandler);
+    exportButtonEl.addEventListener(
+      'click',
+      async event => await clickExportButtonHandler(event)
+    );
   };
 
   const changeChallStyle = (id, challEl) => {
@@ -1388,7 +1420,7 @@ option.tag-custom {
       const id = index + 1;
       state.challElMap.set(id, challEl);
       changeChallStyle(id, challEl);
-      state.challsGotLoaded
+      state.leagueStateGotLoaded
         ? updateChallEl(id, challEl)
         : createChallObj(id, challEl);
     }
@@ -1531,6 +1563,67 @@ option.tag-custom {
     window.addEventListener('scroll', event => {
       makeSticky();
     });
+  };
+
+  const saveFile = async (blob, suggestedName) => {
+    // Feature detection. The API needs to be supported
+    // and the app not run in an iframe.
+    // const supportsFileSystemAccess =
+    //   'showSaveFilePicker' in window &&
+    //   (() => {
+    //     try {
+    //       return window.self === window.top;
+    //     } catch {
+    //       return false;
+    //     }
+    //   })();
+    // // If the File System Access API is supported…
+    // if (supportsFileSystemAccess) {
+    //   try {
+    //     // Show the file save dialog.
+    //     const handle = await window.showSaveFilePicker({
+    //       suggestedName,
+    //     });
+    //     // Write the blob to the file.
+    //     const writable = await handle.createWritable();
+    //     await writable.write(blob);
+    //     await writable.close();
+    //     return;
+    //   } catch (err) {
+    //     // Fail silently if the user has simply canceled the dialog.
+    //     if (err.name !== 'AbortError') {
+    //       console.error(err.name, err.message);
+    //       return;
+    //     }
+    //   }
+    // }
+    // Fallback if the File System Access API is not supported…
+    // Create the blob URL.
+    const blobURL = URL.createObjectURL(blob);
+    // Create the `<a download>` element and append it invisibly.
+    const a = document.createElement('a');
+    a.href = blobURL;
+    a.download = suggestedName;
+    a.style.display = 'none';
+    document.body.append(a);
+    // Programmatically click the element.
+    a.click();
+    // Revoke the blob URL and remove the element.
+    setTimeout(() => {
+      URL.revokeObjectURL(blobURL);
+      a.remove();
+    }, 1000);
+  };
+
+  const clickExportButtonHandler = async event => {
+    let poeStateString = localStorage.getItem('poe');
+    const blob = new Blob([btoa(poeStateString)], { type: 'text/plain' });
+    const date = new Date();
+    const nowStr = date
+      .toLocaleString(navigator.language)
+      .replace(', ', '_')
+      .replaceAll(':', '-');
+    await saveFile(blob, `poe_${nowStr}.txt`);
   };
 
   const init = () => {
