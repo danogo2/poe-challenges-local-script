@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.005.0014
+// @version      000.005.0015
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -16,587 +16,602 @@
   'use strict';
   GM_addStyle(`
   /* adjusting layout */
-  .profile {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .profile .profile-top {
-    height: 30px;
-  }
-  
-  .profile .title-bar {
-    display: block;
-    align-self: center;
-    margin: 0;
-    flex-grow: 1;
-    text-align: right;
-  }
-  
-  .profile .title-bar::first-letter {
-    text-transform: uppercase;
-  }
-  
-  .challenge-list.poeForm form,
-  .challenge-list.poeForm form select {
-    height: 100%;
-    max-width: 160px;
-  }
-  
-  .profile .profile-container,
-  .profile .profile-container .container-top {
-    width: 100%;
-    box-sizing: border-box;
-    padding-right: 2px;
-  }
-  
-  .profile .profile-container .achievement-container .achievement-list {
-    width: 100%;
-    margin-top: 6px;
-    box-sizing: border-box;
-  }
-  
-  .profile .profile-container .container-top {
-    background-size: cover;
-  }
-  
-  .profile .profile-details,
-  .profile .progress-bar-container.large,
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    .challenge-progress-bar-container {
-    display: none;
-  }
-  
-  .stickyOffsetMargin {
-    padding-top: 39px;
-  }
-  
-  .info.sticky {
-    position: fixed;
-    top: 0;
-    z-index: 1;
-    background-color: #181818f0;
-    box-sizing: border-box;
-    width: 922px;
-    padding: 4px 9px;
-    transform: translateX(-17px);
-    border-bottom-left-radius: 6px;
-    border-bottom-right-radius: 6px;
-    border: 2px solid #282828;
-    margin-left: 1px;
-  }
-  
-  /* adding settings */
-  .settings {
-    display: flex;
-    padding: 5px 0;
-    gap: 2%;
-    align-items: stretch;
-  }
-  
-  .sticky .settings {
-    padding: 5px 5px;
-  }
-  
-  .input-search,
-  .tag-select {
-    background-color: rgba(42, 42, 42, 0.9);
-    border: 3px solid #1d1d1c;
-    border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
-      3 3 3 3 repeat;
-    color: #beb698;
-    box-sizing: border-box;
-    padding: 3px;
-    font-size: 0.8rem;
-    max-width: 160px;
-    height: 100%;
-  }
-  
-  .tag-select {
-    width: 160px;
-  }
-  
-  .input-search::placeholder,
-  .tag-select::placeholder {
-    color: #beb69888;
-    font-size: 0.8rem;
-    padding-left: 0;
-  }
-  
-  .input-search:focus,
-  .tag-select:focus {
-    outline: none;
-    border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
-      3 3 3 3 repeat;
-  }
-  
-  .tag-select,
-  .league-select {
-    cursor: pointer;
-  }
-  
-  option.tag-custom {
-    color: rgb(152, 182, 190);
-  }
-  
-  .display-tag span.custom {
-    color: rgb(152, 182, 190);
-  }
-  
-  .display-tag span.default {
-    color: rgb(190, 182, 152);
-  }
-  
-  .side-notes {
-    /* 17px is a scrollbar width */
-    max-height: 100vh;
-    width: calc((100vw - 1012px - 17px) / 2);
-    background-color: #181818f0;
-    border: 2px solid #282828;
-    z-index: 1;
-    box-sizing: border-box;
-    top: 0;
-    left: 0;
-    position: fixed;
-    overflow-x: hidden;
-    padding: 0;
-    display: none;
-  }
-  
-  .side-notes.hide-notes {
-    width: auto;
-  }
-  
-  .side-notes.hide-notes .side-settings {
-    gap: 0;
-  }
-  
-  .side-notes:has(*.side-challenge:not(.hidden)) {
-    display: block;
-  }
-  
-  .side-notes::-webkit-scrollbar {
-    width: 10px;
-  }
-  
-  .side-notes::-webkit-scrollbar-track {
-    background: #222;
-  }
-  
-  .side-notes::-webkit-scrollbar-thumb {
-    background: #444;
-  }
-  
-  .side-notes::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-  
-  .side-notes.right {
-    right: 0;
-    left: auto;
-    border-bottom-left-radius: 6px;
-  }
-  
-  .side-notes:not(.right) {
-    border-bottom-right-radius: 6px;
-  }
-  
-  .side-nav {
-    display: flex;
-    justify-content: space-between;
-    background-color: #282828;
-    padding: 12px;
-    align-items: center;
-  }
-  
-  .right .side-nav {
-    flex-direction: row-reverse;
-  }
-  
-  .side-header {
-    font-size: 16px;
-    text-align: center;
-  }
-  
-  .side-header:hover {
-    filter: brightness(0.8);
-    cursor: pointer;
-  }
-  
-  .side-settings {
-    display: flex;
-    gap: 8px;
-  }
-  
-  .right .side-settings {
-    flex-direction: row-reverse;
-  }
-  
-  .side-challenges {
-    padding: 0 12px;
-  }
-  
-  .side-challenges:has(> :not(.hidden)) {
-    padding-top: 12px;
-    padding-bottom: 12px;
-  }
-  
-  .hide-notes .side-challenges,
-  .hide-completed .side-challenges {
-    display: none;
-  }
-  
-  .hide-completed .side-challenges:has(> .incomplete:not(.hidden)) {
-    display: list-item;
-  }
-  
-  .side-challenge {
-    padding-top: 6px;
-  }
-  
-  .side-challenge-header {
-    font-size: 12px;
-    display: flex;
-    cursor: pointer;
-    align-items: center;
-  }
-  
-  .side-challenge-header:hover {
-    filter: brightness(0.8);
-  }
-  
-  .goto-container {
-    display: flex;
-    height: 100%;
-    margin-left: 10px;
-    align-items: center;
-    visibility: hidden;
-  }
-  
-  .icon-goto {
-    width: 12px;
-    height: 12px;
-  }
-  
-  .side-challenge-header:hover .goto-container {
-    visibility: visible;
-  }
-  
-  .side-note {
-    font-size: 11px;
-    padding: 4px 0 8px 0;
-    white-space: pre-wrap;
-  }
-  
-  .settings-icon.icon-minimize {
-    width: 18px;
-    height: 18px;
-  }
-  
-  .note-completion {
-    flex-grow: 1;
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-  }
-  
-  .note-completion-check.incomplete {
-    visibility: hidden;
-  }
-  
-  /* hide toggle button */
-  
-  .button-settings {
-    display: flex;
-    height: 100%;
-    align-items: center;
-    background: transparent;
-    border: none;
-    box-sizing: border-box;
-    outline: none;
-    padding: 0;
-  }
-  
-  .button-settings:hover {
-    filter: brightness(0.8);
-  }
-  
-  .settings-icon {
-    width: 24px;
-    height: 24px;
-    cursor: pointer;
-    align-items: center;
-  }
-  
-  .icon-show-notes {
-    width: 20px;
-    width: 20px;
-  }
-  
-  /* challenge box */
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement {
-    width: 100%;
-    background-size: 100% 40px;
-  }
-  
-  .achievement-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    height: 40px;
-    gap: 10px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    h2.challenge-header-text {
-    display: flex;
-    align-items: center;
-    text-wrap: nowrap;
-    padding: 6px 0 6px 80px;
-    font-size: 17px;
-    height: 70%;
-    box-sizing: border-box;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    img.completion {
-    position: static;
-    width: 32px;
-    height: 32px;
-    margin-left: 10px;
-    margin-right: 10px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    h2.completion-detail {
-    line-height: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    padding-right: 26px;
-  }
-  /* challenge tag input */
-  .input-tag,
-  .display-tag {
-    background-color: transparent;
-    border: none;
-    color: #989898;
-    align-self: center;
-    flex-grow: 1;
-    border-radius: 4px;
-    padding: 6px 4px;
-    height: 70%;
-    box-sizing: border-box;
-    font-size: 13px;
-    font-family: Arial, Helvetica, sans-serif;
-  }
-  
-  .input-tag:focus {
-    outline: 1px solid #989898;
-  }
-  
-  .input-tag:hover,
-  .display-tag:hover {
-    outline: 1px solid #989898;
-    cursor: pointer;
-  }
-  
-  .display-tag {
-    overflow-x: scroll;
-    text-wrap: nowrap;
-    display: flex;
-    align-items: center;
-  }
-  
-  .display-tag span {
-    line-height: 1;
-  }
-  
-  .display-tag::-webkit-scrollbar {
-    display: none;
-  }
-  
-  .input-tag::placeholder {
-    color: #beb69888;
-  }
-  
-  /* unhide challenge details */
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail {
-    display: block;
-    background-size: cover;
-    margin-top: 0;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail-inner {
-    padding-left: 80px;
-    padding-top: 20px;
-    padding-bottom: 20px;
-    padding-right: 26px;
-  }
-  
-  .btn-detail {
-    display: none;
-  }
-  
-  .completion {
-    margin-right: 6px;
-  }
-  
-  .items {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    column-gap: 16px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    ul.split {
-    width: 100%;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    ul:not(.split) {
-    grid-column: 1 / span 2;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    span.text {
-    display: block;
-    padding-bottom: 8px;
-    font-size: 14px;
-  }
-  
-  .profile
-    .profile-container
-    .achievement-container
-    .achievement-list
-    .achievement
-    .detail
-    ul
-    li {
-    font-size: 14px;
-  }
-  
-  .note-textarea {
-    width: 100%;
-    box-sizing: border-box;
-    height: 100%;
-    background-color: transparent;
-    resize: none;
-    border: none;
-    color: #989898;
-    padding: 4px;
-    font-size: 0.8rem;
-    border-radius: 4px;
-  }
-  
-  .note-textarea:focus {
-    outline: 1px solid #333;
-  }
-  
-  .note-textarea:hover {
-    outline: 1px solid #333;
-    cursor: pointer;
-  }
-  
-  .note-textarea::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .note-textarea::-webkit-scrollbar-track {
-    background: #222;
-  }
-  
-  .note-textarea::-webkit-scrollbar-thumb {
-    background: #444;
-  }
-  
-  .note-textarea::-webkit-scrollbar-thumb:hover {
-    background: #555;
-  }
-  
-  .note-textarea::placeholder {
-    color: #beb69888;
-  }
-  
-  .inner-block {
-    display: block;
-  }
-  
-  /* hide elements */
-  
-  .icon-show,
-  .icon-show-notes,
-  .hide-completed .icon-hide,
-  .hide-notes .icon-minimize,
-  .hide-notes .arrow-left,
-  .hide-notes .arrow-right,
-  .arrow-left,
-  .side-notes.right .arrow-right,
-  .hide-notes .side-header,
-  .hide-completed .side-challenge.complete {
-    display: none;
-  }
-  
-  .icon-hide,
-  .hide-completed .icon-show,
-  .hide-notes .icon-show-notes,
-  .side-notes.right:not(.hide-notes) .arrow-left {
-    display: flex;
-  }
-  
-  .hidden,
-  .search-hidden,
-  .tag-hidden,
-  .hide-completed .achievement:not(.incomplete) {
-    display: none;
-  }
+.profile {
+  display: flex;
+  flex-direction: column;
+}
+
+.profile .profile-top {
+  height: 30px;
+}
+
+.profile .title-bar {
+  display: block;
+  align-self: center;
+  margin: 0;
+  flex-grow: 1;
+  text-align: right;
+}
+
+.profile .title-bar::first-letter {
+  text-transform: uppercase;
+}
+
+.challenge-list.poeForm form,
+.challenge-list.poeForm form select {
+  height: 100%;
+  max-width: 160px;
+}
+
+.profile .profile-container,
+.profile .profile-container .container-top {
+  width: 100%;
+  box-sizing: border-box;
+  padding-right: 2px;
+}
+
+.profile .profile-container .achievement-container .achievement-list {
+  width: 100%;
+  margin-top: 6px;
+  box-sizing: border-box;
+}
+
+.profile .profile-container .container-top {
+  background-size: cover;
+}
+
+.profile .profile-details,
+.profile .progress-bar-container.large,
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  .challenge-progress-bar-container {
+  display: none;
+}
+
+.stickyOffsetMargin {
+  padding-top: 39px;
+}
+
+.info.sticky {
+  position: fixed;
+  top: 0;
+  z-index: 1;
+  background-color: #181818f0;
+  box-sizing: border-box;
+  width: 922px;
+  padding: 4px 9px;
+  transform: translateX(-17px);
+  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border: 2px solid #282828;
+  margin-left: 1px;
+}
+
+/* adding settings */
+.settings {
+  display: flex;
+  padding: 5px 0;
+  gap: 2%;
+  align-items: stretch;
+}
+
+.sticky .settings {
+  padding: 5px 5px;
+}
+
+.input-search,
+.tag-select {
+  background-color: rgba(42, 42, 42, 0.9);
+  border: 3px solid #1d1d1c;
+  border-image: url(/protected/image/border/border1.png?v=1704855224122&key=DPRxGBu6U2K_Mk-O2PTPUg)
+    3 3 3 3 repeat;
+  color: #beb698;
+  box-sizing: border-box;
+  padding: 3px;
+  font-size: 0.8rem;
+  max-width: 160px;
+  height: 100%;
+}
+
+.tag-select {
+  width: 160px;
+}
+
+.input-search::placeholder,
+.tag-select::placeholder {
+  color: #beb69888;
+  font-size: 0.8rem;
+  padding-left: 0;
+}
+
+.input-search:focus,
+.tag-select:focus {
+  outline: none;
+  border-image: url('/protected/image/border/border1-active.png?v=1704855224122&key=Uu-xjxla35hOBDKrRr9TFA')
+    3 3 3 3 repeat;
+}
+
+.tag-select,
+.league-select {
+  cursor: pointer;
+}
+
+option.tag-custom {
+  color: rgb(152, 182, 190);
+}
+
+.display-tag span.custom {
+  color: rgb(152, 182, 190);
+}
+
+.display-tag span.default {
+  color: rgb(190, 182, 152);
+}
+
+.side-notes {
+  /* 17px is a scrollbar width */
+  max-height: 100vh;
+  width: calc((100vw - 1012px - 17px) / 2);
+  background-color: #181818f0;
+  border: 2px solid #282828;
+  z-index: 1;
+  box-sizing: border-box;
+  top: 0;
+  left: 0;
+  position: fixed;
+  overflow-x: hidden;
+  padding: 0;
+  display: none;
+}
+
+.side-notes.hide-notes {
+  width: auto;
+}
+
+.side-notes.hide-notes .side-settings {
+  gap: 0;
+}
+
+.side-notes:has(*.side-challenge:not(.hidden)) {
+  display: block;
+}
+
+.side-notes::-webkit-scrollbar {
+  width: 10px;
+}
+
+.side-notes::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.side-notes::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+.side-notes::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.side-notes.right {
+  right: 0;
+  left: auto;
+  border-bottom-left-radius: 6px;
+}
+
+.side-notes:not(.right) {
+  border-bottom-right-radius: 6px;
+}
+
+.side-nav {
+  display: flex;
+  justify-content: space-between;
+  background-color: #282828;
+  padding: 12px;
+  align-items: center;
+}
+
+.right .side-nav {
+  flex-direction: row-reverse;
+}
+
+.side-nav .settings-icon {
+  width: 18px;
+  height: 18px;
+}
+
+.side-header {
+  font-size: 18px;
+  text-align: center;
+}
+
+.side-header:hover {
+  filter: brightness(0.8);
+  cursor: pointer;
+}
+
+.right .side-settings {
+  flex-direction: row-reverse;
+}
+
+.arrow-left {
+  justify-content: flex-start;
+}
+
+.icon-minimize svg,
+.arrow-left svg,
+.arrow-right svg {
+  width: 18px;
+  height: 18px;
+}
+
+.arrow-right {
+  justify-content: flex-end;
+}
+
+.side-challenges {
+  padding: 0 12px;
+}
+
+.side-challenges:has(> :not(.hidden)) {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.hide-notes .side-challenges,
+.hide-completed .side-challenges {
+  display: none;
+}
+
+.hide-completed .side-challenges:has(> .incomplete:not(.hidden)) {
+  display: list-item;
+}
+
+.side-challenge {
+  padding-top: 6px;
+}
+
+.side-challenge-header {
+  font-size: 12px;
+  display: flex;
+  cursor: pointer;
+  align-items: center;
+}
+
+.side-challenge-header:hover {
+  filter: brightness(0.8);
+}
+
+.goto-container {
+  display: flex;
+  height: 100%;
+  margin-left: 10px;
+  align-items: center;
+  visibility: hidden;
+}
+
+.icon-goto {
+  width: 12px;
+  height: 12px;
+}
+
+.side-challenge-header:hover .goto-container {
+  visibility: visible;
+}
+
+.side-note {
+  font-size: 11px;
+  padding: 4px 0 8px 0;
+  white-space: pre-wrap;
+}
+
+.settings-icon.icon-minimize {
+  width: 18px;
+  height: 18px;
+}
+
+.note-completion {
+  flex-grow: 1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.note-completion-check.incomplete {
+  visibility: hidden;
+}
+
+/* hide toggle button */
+
+.button-settings {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  background: transparent;
+  border: none;
+  box-sizing: border-box;
+  outline: none;
+  padding: 0;
+}
+
+.button-settings:hover {
+  filter: brightness(0.8);
+}
+
+.settings-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  align-items: center;
+}
+
+.icon-show-notes {
+  width: 20px;
+  width: 20px;
+}
+
+/* challenge box */
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement {
+  width: 100%;
+  background-size: 100% 40px;
+}
+
+.achievement-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  height: 40px;
+  gap: 10px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  h2.challenge-header-text {
+  display: flex;
+  align-items: center;
+  text-wrap: nowrap;
+  padding: 6px 0 6px 80px;
+  font-size: 17px;
+  height: 70%;
+  box-sizing: border-box;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  img.completion {
+  position: static;
+  width: 32px;
+  height: 32px;
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  h2.completion-detail {
+  line-height: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  padding-right: 26px;
+}
+/* challenge tag input */
+.input-tag,
+.display-tag {
+  background-color: transparent;
+  border: none;
+  color: #989898;
+  align-self: center;
+  flex-grow: 1;
+  border-radius: 4px;
+  padding: 6px 4px;
+  height: 70%;
+  box-sizing: border-box;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.input-tag:focus {
+  outline: 1px solid #989898;
+}
+
+.input-tag:hover,
+.display-tag:hover {
+  outline: 1px solid #989898;
+  cursor: pointer;
+}
+
+.display-tag {
+  overflow-x: scroll;
+  text-wrap: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.display-tag span {
+  line-height: 1;
+}
+
+.display-tag::-webkit-scrollbar {
+  display: none;
+}
+
+.input-tag::placeholder {
+  color: #beb69888;
+}
+
+/* unhide challenge details */
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail {
+  display: block;
+  background-size: cover;
+  margin-top: 0;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail-inner {
+  padding-left: 80px;
+  padding-top: 20px;
+  padding-bottom: 20px;
+  padding-right: 26px;
+}
+
+.btn-detail {
+  display: none;
+}
+
+.completion {
+  margin-right: 6px;
+}
+
+.items {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  column-gap: 16px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  ul.split {
+  width: 100%;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  ul:not(.split) {
+  grid-column: 1 / span 2;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  span.text {
+  display: block;
+  padding-bottom: 8px;
+  font-size: 14px;
+}
+
+.profile
+  .profile-container
+  .achievement-container
+  .achievement-list
+  .achievement
+  .detail
+  ul
+  li {
+  font-size: 14px;
+}
+
+.note-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+  background-color: transparent;
+  resize: none;
+  border: none;
+  color: #989898;
+  padding: 4px;
+  font-size: 0.8rem;
+  border-radius: 4px;
+}
+
+.note-textarea:focus {
+  outline: 1px solid #333;
+}
+
+.note-textarea:hover {
+  outline: 1px solid #333;
+  cursor: pointer;
+}
+
+.note-textarea::-webkit-scrollbar {
+  width: 4px;
+}
+
+.note-textarea::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.note-textarea::-webkit-scrollbar-thumb {
+  background: #444;
+}
+
+.note-textarea::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.note-textarea::placeholder {
+  color: #beb69888;
+}
+
+.inner-block {
+  display: block;
+}
+
+/* hide elements */
+
+.icon-show,
+.icon-show-notes,
+.hide-completed .icon-hide,
+.hide-notes .icon-minimize,
+.hide-notes .arrow-left,
+.hide-notes .arrow-right,
+.arrow-left,
+.side-notes.right .arrow-right,
+.hide-notes .side-header,
+.hide-completed .side-challenge.complete {
+  display: none;
+}
+
+.icon-hide,
+.hide-completed .icon-show,
+.hide-notes .icon-show-notes,
+.side-notes.right:not(.hide-notes) .arrow-left {
+  display: flex;
+}
+
+.hidden,
+.search-hidden,
+.tag-hidden,
+.hide-completed .achievement:not(.incomplete) {
+  display: none;
+}
   `);
 
   const svgIconEye =
@@ -609,10 +624,10 @@
     '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path d="M296 64h-80a7.91 7.91 0 00-8 8v24h96V72a7.91 7.91 0 00-8-8z" fill="none"/><path d="M432 96h-96V72a40 40 0 00-40-40h-80a40 40 0 00-40 40v24H80a16 16 0 000 32h17l19 304.92c1.42 26.85 22 47.08 48 47.08h184c26.13 0 46.3-19.78 48-47l19-305h17a16 16 0 000-32zM192.57 416H192a16 16 0 01-16-15.43l-8-224a16 16 0 1132-1.14l8 224A16 16 0 01192.57 416zM272 400a16 16 0 01-32 0V176a16 16 0 0132 0zm32-304h-96V72a7.91 7.91 0 018-8h80a7.91 7.91 0 018 8zm32 304.57A16 16 0 01320 416h-.58A16 16 0 01304 399.43l8-224a16 16 0 1132 1.14z" fill="#beb698"/></svg>';
 
   const svgIconArrowR =
-    '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path fill="none" stroke="#beb698" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M262.62 336L342 256l-79.38-80M330.97 256H170"/><path d="M256 448c106 0 192-86 192-192S362 64 256 64 64 150 64 256s86 192 192 192z" fill="none" stroke="#beb698" stroke-miterlimit="10" stroke-width="32"/></svg>';
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#beb698" d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM294.6 135.1c-4.2-4.5-10.1-7.1-16.3-7.1C266 128 256 138 256 150.3V208H160c-17.7 0-32 14.3-32 32v32c0 17.7 14.3 32 32 32h96v57.7c0 12.3 10 22.3 22.3 22.3c6.2 0 12.1-2.6 16.3-7.1l99.9-107.1c3.5-3.8 5.5-8.7 5.5-13.8s-2-10.1-5.5-13.8L294.6 135.1z"/></svg>';
 
   const svgIconArrowL =
-    '<svg xmlns="http://www.w3.org/2000/svg" class="ionicon" viewBox="0 0 512 512"><path fill="none" stroke="#beb698" stroke-linecap="round" stroke-linejoin="round" stroke-width="32" d="M249.38 336L170 256l79.38-80M181.03 256H342"/><path d="M448 256c0-106-86-192-192-192S64 150 64 256s86 192 192 192 192-86 192-192z" fill="none" stroke="#beb698" stroke-miterlimit="10" stroke-width="32"/></svg>';
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#beb698" d="M48 256a208 208 0 1 1 416 0A208 208 0 1 1 48 256zm464 0A256 256 0 1 0 0 256a256 256 0 1 0 512 0zM217.4 376.9c4.2 4.5 10.1 7.1 16.3 7.1c12.3 0 22.3-10 22.3-22.3V304h96c17.7 0 32-14.3 32-32V240c0-17.7-14.3-32-32-32H256V150.3c0-12.3-10-22.3-22.3-22.3c-6.2 0-12.1 2.6-16.3 7.1L117.5 242.2c-3.5 3.8-5.5 8.7-5.5 13.8s2 10.1 5.5 13.8l99.9 107.1z"/></svg>';
 
   const svgIconArrowGoTo =
     '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#beb698" d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"/></svg>';
