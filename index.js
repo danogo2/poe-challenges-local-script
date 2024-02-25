@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         pathofexile.com Challenges
 // @namespace    http://tampermonkey.net/
-// @version      000.007.001
+// @version      000.007.002
 // @updateURL    https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @downloadURL  https://raw.githubusercontent.com/danogo2/pathofexile.com-challenges/main/index.js
 // @description  path of exile challenges extension
@@ -306,6 +306,7 @@ option.tag-custom {
   font-size: 11px;
   padding: 4px 0 8px 0;
   white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .settings-icon.icon-minimize {
